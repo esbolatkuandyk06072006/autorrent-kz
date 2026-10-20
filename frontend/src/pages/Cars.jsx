@@ -9,7 +9,6 @@ export default function Cars() {
     brand: '',
     city: '',
     category: '',
-    minPrice: '',
     maxPrice: '',
     startDate: '',
     endDate: ''
@@ -52,7 +51,7 @@ export default function Cars() {
   }
 
   const reset = () => {
-    setFilters({ brand: '', city: '', category: '', minPrice: '', maxPrice: '', startDate: '', endDate: '' })
+    setFilters({ brand: '', city: '', category: '', maxPrice: '', startDate: '', endDate: '' })
     setPage(0)
   }
 
@@ -95,11 +94,7 @@ export default function Cars() {
               </select>
             </label>
             <label>
-              Цена от
-              <input type="number" min="0" value={filters.minPrice} onChange={update('minPrice')} placeholder="0" />
-            </label>
-            <label>
-              Цена до
+              Цена до, ₸
               <input type="number" min="0" value={filters.maxPrice} onChange={update('maxPrice')} placeholder="100000" />
             </label>
             <label>
