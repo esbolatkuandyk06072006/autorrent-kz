@@ -50,6 +50,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
                                 "/api/v1/auth/**",
+                                "/api/v1/ai/**",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
@@ -65,6 +66,7 @@ public class SecurityConfig {
                                 "/", "/index.html", "/assets/**", "/favicon.ico", "/favicon.svg",
                                 "/cars", "/cars/**",
                                 "/login", "/register",
+                                "/favorites", "/compare", "/assistant", "/routes",
                                 "/my-reservations", "/profile",
                                 "/admin", "/admin/**").permitAll()
                         .anyRequest().authenticated()
