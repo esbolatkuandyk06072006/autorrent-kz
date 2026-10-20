@@ -1,9 +1,9 @@
 # Техническое задание: AutoRent KZ
 
-**Версия:** 1.0 (MVP)  
-**Дата:** 20.10.2026  
-**Тип проекта:** итоговый учебный проект, backend-платформа аренды автомобилей  
-**Статус:** MVP реализован, frontend вынесен в следующий этап
+**Версия:** 1.1 (MVP + frontend)  
+**Дата:** 21.10.2026  
+**Тип проекта:** итоговый учебный проект, монорепо платформы аренды автомобилей  
+**Статус:** реализовано: backend + React frontend
 
 ---
 
@@ -41,6 +41,7 @@
 **Входит в MVP:**
 
 - backend REST API;
+- React frontend (SPA: каталог, бронирование, отзывы, админ-панель);
 - Swagger UI / OpenAPI;
 - H2 для локального запуска и тестов;
 - PostgreSQL для профиля `postgres`;
@@ -55,7 +56,6 @@
 
 **Не входит в MVP (следующий этап):**
 
-- React/Vue frontend;
 - онлайн-оплата и эквайринг;
 - SMS/email-уведомления;
 - загрузка фотографий в S3;
@@ -64,9 +64,12 @@
 - страхование и франшиза;
 - deploy/CD (CI workflow добавлен, см. раздел 10.1).
 
-### 1.3. Почему MVP без frontend
+### 1.3. Архитектура монорепо
 
-По методичке frontend не обязателен, если подготовлен Swagger/OpenAPI. В MVP выбран backend-first подход: сначала стабилизируется доменная модель, API, безопасность и бизнес-правила, затем на их основе делается frontend. Swagger UI полностью закрывает демонстрацию API и позволяет проверять сценарии вручную.
+Репозиторий разбит на две части:
+
+- `backend/` — Spring Boot REST API;
+- `frontend/` — SPA на React 19 + Vite, собранная статика встраивается в backend-jar (`static`), так что одно приложение отдаёт и сайт, и API. В dev-режиме Vite dev-server на `:5173` проксирует API-запросы на `:8080`.
 
 ---
 
@@ -746,8 +749,11 @@ kz.autorrent
 | Документация | springdoc-openapi + Swagger UI | 2.8.6 | OpenAPI 3 и интерактивная документация |
 | Тесты | JUnit 5, Mockito, AssertJ, MockMvc | Boot-managed | Unit- и integration-тесты |
 | Покрытие | JaCoCo | 0.8.12 | Отчёт о покрытии |
-| CI | GitHub Actions | — | `mvn verify` и JaCoCo-артефакт |
+| CI | GitHub Actions | — | Два job: `mvn verify` (backend) и `npm run build` (frontend) |
 | Контейнеризация | Docker, Docker Compose | 24+ / v2 | PostgreSQL + приложение одной командой |
+| Frontend | React + Vite | 19 / 7 | SPA-клиент, встраивается в backend-jar |
+| Роутинг | React Router | 7.x | Маршруты: каталог, карточка, брони, профиль, админка |
+| Стили | Самописный CSS | — | Переменные, адаптив, без внешних зависимостей |
 | VCS | Git + GitHub | — | История коммитов и сдача проекта |
 | API-клиент | Postman | — | Коллекция запросов для демо |
 
@@ -762,17 +768,17 @@ kz.autorrent
 - **Strategy/Factory/Facade** — естественно ложатся на расчёт цены и сценарий бронирования, а не являются искусственными примерами.
 - **Docker Compose** — бонусное требование и простой способ показать PostgreSQL-профиль.
 
-### 10.3. Планируемый frontend (следующий этап)
+### 10.3. Frontend (реализован)
 
 | Технология | Назначение |
 |---|---|
-| React 19 + Vite | SPA-клиент |
-| React Router | Маршруты: каталог, карточка, брони, профиль, админка |
-| Axios / fetch | Работа с REST API и JWT |
-| CSS Modules / Tailwind | Стилизация |
-| Swagger UI | Резервный способ демонстрации API |
+| React 19 + Vite | SPA-клиент (`frontend/`) |
+| React Router 7 | Маршруты: каталог, карточка, брони, профиль, админка |
+| fetch | JWT-клиент REST API (`src/api.js`) |
+| CSS (переменные, адаптив) | Стилизация без внешних библиотек |
+| Swagger UI | Документация API (`/swagger-ui.html`) |
 
-Frontend не входит в MVP; API уже спроектирован так, чтобы его можно было подключить без изменений.
+Сборка Vite пишет статику в `backend/src/main/resources/static`, поэтому Spring Boot jar отдаёт сайт и API на одном порту. В dev-режиме `npm run dev` поднимает сервер на `:5173` с прокси на `:8080`.
 
 ---
 
@@ -796,12 +802,13 @@ Frontend не входит в MVP; API уже спроектирован так,
 ### 11.3. Запуск тестов
 
 ```bash
+cd backend
 mvn test
 ```
 
 - Тесты используют H2 и профиль `test`.
 - Демо-seed в тестах отключён.
-- JaCoCo формирует отчёт в `target/site/jacoco/index.html`.
+- JaCoCo формирует отчёт в `backend/target/site/jacoco/index.html`.
 
 ### 11.4. Ручной smoke-test
 
@@ -819,13 +826,23 @@ mvn test
 
 ## 12. Запуск и развёртывание
 
+### 12.0. Сборка frontend (перед запуском backend)
+
+```bash
+cd frontend
+npm install
+npm run build   # статика попадает в backend/src/main/resources/static
+```
+
 ### 12.1. Локальный запуск (H2, самый простой)
 
 ```bash
+cd backend
 mvn spring-boot:run
 ```
 
-- API: `http://localhost:8080`
+- Сайт: `http://localhost:8080`
+- API: `http://localhost:8080/api/v1`
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - H2 console: `http://localhost:8080/h2-console`
   - JDBC URL: `jdbc:h2:mem:autorrent`
@@ -836,6 +853,7 @@ mvn spring-boot:run
 
 ```bash
 docker compose up -d db
+cd backend
 mvn spring-boot:run -Dspring-boot.run.profiles=postgres
 ```
 
@@ -843,6 +861,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=postgres
 
 ```bash
 set SPRING_PROFILES_ACTIVE=postgres
+cd backend
 mvn spring-boot:run
 ```
 
@@ -854,7 +873,9 @@ mvn spring-boot:run
 docker compose up --build
 ```
 
-- Приложение: `http://localhost:8080`
+Multi-stage Dockerfile собирает frontend (node) и backend (maven) в один образ.
+
+- Сайт и API: `http://localhost:8080`
 - PostgreSQL: `localhost:5432`
 - Flyway применяет `V1__init.sql` автоматически.
 
@@ -905,7 +926,7 @@ README должен содержать:
 
 ### 13.3. Postman
 
-Коллекция `postman/AutoRentKZ.postman_collection.json`:
+Коллекция `backend/postman/AutoRentKZ.postman_collection.json`:
 
 - переменные `baseUrl`, `token`;
 - login с автоматическим сохранением токена;
@@ -919,7 +940,6 @@ README должен содержать:
 
 ### 14.1. Ближайшие улучшения
 
-- React-клиент с каталогом, картой, личным кабинетом и админкой.
 - Refresh-token и logout/blacklist.
 - Email/SMS-подтверждение бронирования.
 - Загрузка изображений в S3/MinIO.
@@ -942,8 +962,9 @@ README должен содержать:
 - [x] Unit- и integration-тесты.
 - [x] Docker + PostgreSQL профиль (бонус).
 - [x] CI workflow: `mvn verify` + JaCoCo artifact.
+- [x] Frontend: React SPA (каталог, бронирование, отзывы, админ-панель).
+- [x] Монорепо: `backend/` + `frontend/`, CI для обеих частей.
 - [ ] CD/deploy (следующий этап).
-- [ ] Frontend (следующий этап).
 
 ---
 

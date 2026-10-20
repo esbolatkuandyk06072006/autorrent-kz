@@ -1,15 +1,18 @@
-# AutoRent KZ — MVP
+# AutoRent KZ
 
-Backend-платформа аренды автомобилей на **Java 21 + Spring Boot 3.4.5**.  
-MVP включает JWT-аутентификацию, роли `USER`/`ADMIN`, CRUD автомобилей, бронирований и отзывов, проверку доступности по датам, расчёт цены со скидкой и Swagger UI.
+Монорепо платформы аренды автомобилей: **backend** на Java 21 + Spring Boot 3.4.5 и **frontend** — SPA на React 19 + Vite.
 
-> Подробное техническое задание и описание стека: [`docs/TZ.md`](docs/TZ.md)
+Backend включает JWT-аутентификацию, роли `USER`/`ADMIN`, CRUD автомобилей, бронирований и отзывов, проверку доступности по датам, расчёт цены со скидкой и Swagger UI.  
+Frontend — каталог с фильтрами, бронирование, «Мои брони», отзывы, профиль и админ-панель. Сборка фронта встраивается в backend-jar: одно приложение на `:8080` отдаёт и сайт, и API.
+
+> Подробное техническое задание: [`docs/TZ.md`](docs/TZ.md)
 
 ---
 
 ## Содержание
 
 - [Быстрый старт](#быстрый-старт)
+- [Frontend](#frontend)
 - [Демо-доступ](#демо-доступ)
 - [Запуск с PostgreSQL](#запуск-с-postgresql)
 - [Docker Compose](#docker-compose)
@@ -30,35 +33,43 @@ MVP включает JWT-аутентификацию, роли `USER`/`ADMIN`, 
 ### Требования
 
 - JDK 21
+- Node.js 22+ (для сборки frontend)
 - Maven 3.9+ **или** входящий в проект Maven Wrapper
 - Docker — только для PostgreSQL-профиля
 
-### Запуск на H2
+### Запуск на H2 (backend + frontend одной командой)
+
+Соберите frontend (пишет статику в `backend/src/main/resources/static`):
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+Затем запустите backend.
 
 Windows PowerShell:
 
 ```powershell
+cd backend
 .\mvnw.cmd spring-boot:run
 ```
 
 Linux/macOS:
 
 ```bash
+cd backend
 ./mvnw spring-boot:run
-```
-
-Если Maven установлен глобально, можно использовать:
-
-```bash
-mvn spring-boot:run
 ```
 
 Приложение автоматически:
 
 - создаёт схему в H2;
 - добавляет демо-данные;
-- открывает API на `http://localhost:8080`;
-- открывает Swagger UI на `http://localhost:8080/swagger-ui.html`.
+- открывает сайт на `http://localhost:8080`;
+- открывает Swagger UI на `http://localhost:8080/swagger-ui.html`;
+- отдаёт API на `http://localhost:8080/api/v1`.
 
 Проверка:
 
@@ -66,11 +77,12 @@ mvn spring-boot:run
 curl http://localhost:8080/api/v1/cars
 ```
 
-### Сборка
+### Сборка backend-джар
 
 Windows:
 
 ```powershell
+cd backend
 .\mvnw.cmd clean package
 java -jar target\autorrent-kz-0.0.1-SNAPSHOT.jar
 ```
@@ -78,9 +90,36 @@ java -jar target\autorrent-kz-0.0.1-SNAPSHOT.jar
 Linux/macOS:
 
 ```bash
+cd backend
 ./mvnw clean package
 java -jar target/autorrent-kz-0.0.1-SNAPSHOT.jar
 ```
+
+---
+
+## Frontend
+
+Стек: React 19, react-router-dom 7, Vite 7 (JSX, самописный CSS).
+
+### Режим разработки
+
+Терминал 1 — backend (`cd backend; .\mvnw.cmd spring-boot:run`), терминал 2:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Vite поднимает dev-сервер на `http://localhost:5173` и проксирует `/api`, `/v3/api-docs`, `/swagger-ui` на `:8080`.
+
+### Возможности
+
+- каталог автомобилей с фильтрами (марка, город, категория, цена, даты доступности);
+- страница автомобиля: характеристики, расчёт стоимости со скидкой 10% от 7 дней, бронирование;
+- «Мои брони» с отменой и причиной;
+- отзывы после завершённой аренды (создание, редактирование, удаление);
+- профиль пользователя;
+- админ-панель: CRUD автомобилей, управление статусами броней, модерация отзывов.
 
 ---
 
@@ -123,12 +162,14 @@ Windows PowerShell:
 
 ```powershell
 $env:SPRING_PROFILES_ACTIVE="postgres"
+cd backend
 .\mvnw.cmd spring-boot:run
 ```
 
 Linux/macOS:
 
 ```bash
+cd backend
 SPRING_PROFILES_ACTIVE=postgres ./mvnw spring-boot:run
 ```
 
@@ -140,19 +181,20 @@ DB_USER=autorrent
 DB_PASSWORD=autorrent
 ```
 
-Их можно переопределить переменными окружения. Схема создаётся Flyway-миграцией `src/main/resources/db/migration/V1__init.sql`.
+Их можно переопределить переменными окружения. Схема создаётся Flyway-миграцией `backend/src/main/resources/db/migration/V1__init.sql`.
 
 ---
 
 ## Docker Compose
 
-Поднять приложение и PostgreSQL одной командой:
+Поднять приложение (backend + frontend в одном образе) и PostgreSQL одной командой:
 
 ```bash
 docker compose up --build
 ```
 
-- API: `http://localhost:8080`
+- Сайт: `http://localhost:8080`
+- API: `http://localhost:8080/api/v1`
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - PostgreSQL: `localhost:5432`
 - Данные БД хранятся в volume `pgdata`.
@@ -317,12 +359,14 @@ Controller → Service/Facade → Repository → Entity → PostgreSQL/H2
 Windows:
 
 ```powershell
+cd backend
 .\mvnw.cmd test
 ```
 
 Linux/macOS:
 
 ```bash
+cd backend
 ./mvnw test
 ```
 
@@ -337,17 +381,17 @@ Linux/macOS:
 Отчёт JaCoCo:
 
 ```text
-target/site/jacoco/index.html
+backend/target/site/jacoco/index.html
 ```
 
 Тесты используют H2 и профиль `test`; демо-seed отключён.
 
 ### Smoke-тест запущенного приложения
 
-После запуска приложения на `http://localhost:8080`:
+После сборки frontend и запуска backend на `http://localhost:8080`:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\smoke-test.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File backend\scripts\smoke-test.ps1
 ```
 
 Скрипт проверяет 45 сценариев: публичный каталог, 401/403, логин ADMIN/USER, создание автомобиля, бронирование, конфликт `409`, валидацию `400`, отмену, смену статусов, отзывы и модерацию, мягкое удаление и Swagger/OpenAPI.
@@ -357,36 +401,48 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\smoke-test.ps1
 ## Структура проекта
 
 ```text
-src/main/java/kz/autorrent
-├── config          # SecurityConfig, OpenApiConfig, DataInitializer
-├── controller      # REST controllers, PageRequestFactory
-├── dto             # request/response records
-├── entity          # JPA entities, enums
-├── exception       # exceptions + GlobalExceptionHandler
-├── mapper          # DtoMapper
-├── repository      # Spring Data repositories
-├── security        # JWT, UserDetails
-├── service         # business logic
-│   └── pricing     # Strategy implementations
-└── validation      # @ValidDateRange
+backend/
+├── src/main/java/kz/autorrent
+│   ├── config          # SecurityConfig, OpenApiConfig, DataInitializer
+│   ├── controller      # REST controllers, PageRequestFactory
+│   ├── dto             # request/response records
+│   ├── entity          # JPA entities, enums
+│   ├── exception       # exceptions + GlobalExceptionHandler
+│   ├── mapper          # DtoMapper
+│   ├── repository      # Spring Data repositories
+│   ├── security        # JWT, UserDetails
+│   ├── service         # business logic
+│   │   └── pricing     # Strategy implementations
+│   └── validation      # @ValidDateRange
+├── src/main/resources
+│   ├── application.yml
+│   ├── application-postgres.yml
+│   ├── db/migration/V1__init.sql
+│   └── static/         # сборка frontend (не в git)
+├── src/test/java/kz/autorrent
+├── postman/AutoRentKZ.postman_collection.json
+├── scripts/smoke-test.ps1
+├── pom.xml
+└── mvnw / mvnw.cmd
 
-src/main/resources
-├── application.yml
-├── application-postgres.yml
-└── db/migration/V1__init.sql
-
-src/test/java/kz/autorrent
-├── ... unit tests
-└── AuthAndCarIntegrationTest.java
+frontend/
+├── index.html
+├── package.json
+├── vite.config.js
+└── src/
+    ├── main.jsx        # точка входа
+    ├── App.jsx         # роутер
+    ├── api.js          # JWT-клиент API
+    ├── AuthContext.jsx # контекст авторизации
+    ├── utils.js        # label'ы, деньги, даты
+    ├── styles.css
+    ├── components/     # Header, CarCard, ui-примитивы
+    └── pages/          # Cars, CarDetail, MyReservations, Profile, Login, Register, admin/
 
 docs/TZ.md
-postman/AutoRentKZ.postman_collection.json
-scripts/smoke-test.ps1
+docs/DEMO.md
 .github/workflows/ci.yml
-.mvn/wrapper/maven-wrapper.properties
-mvnw
-mvnw.cmd
-Dockerfile
+Dockerfile             # multi-stage: node → maven → jre
 docker-compose.yml
 ```
 
@@ -394,16 +450,12 @@ docker-compose.yml
 
 ## Git и GitHub
 
-Проект уже инициализирован как Git-репозиторий: ветка `main`, 20+ логических коммитов, чистое рабочее дерево.
-
-Чтобы опубликовать на GitHub:
+Репозиторий опубликован: [`github.com/esbolatkuandyk06072006/autorrent-kz`](https://github.com/esbolatkuandyk06072006/autorrent-kz) (ветка `main`).
 
 ```bash
-git remote add origin https://github.com/<username>/<repository>.git
+git remote add origin https://github.com/esbolatkuandyk06072006/autorrent-kz.git
 git push -u origin main
 ```
-
-Если Git ещё не установлен, установите Git for Windows (или GitHub Desktop) и откройте терминал в `C:\javaproject`; история коммитов уже находится в каталоге `.git`.
 
 ---
 
@@ -424,10 +476,9 @@ git push -u origin main
 
 ## Ограничения MVP
 
-- Нет frontend — используется Swagger UI.
 - Нет онлайн-оплаты, SMS/email-уведомлений, загрузки фото.
 - Нет refresh-token и logout/blacklist.
-- CI workflow (`mvn verify` + JaCoCo) добавлен; deploy/CD не настроены.
+- CI workflow (backend `mvn verify` + JaCoCo, frontend `npm run build`) добавлен; deploy/CD не настроены.
 - CORS в dev открыт широко; в production нужно ограничить origins.
 - Демо-пароли нельзя использовать в production.
 - H2-профиль — только для локальной разработки; production-профиль — PostgreSQL + Flyway.
@@ -438,7 +489,7 @@ git push -u origin main
 
 - [`docs/TZ.md`](docs/TZ.md) — техническое задание, модель данных, API, стек, тестирование.
 - [`docs/DEMO.md`](docs/DEMO.md) — сценарий демонстрации на защите.
-- [`postman/AutoRentKZ.postman_collection.json`](postman/AutoRentKZ.postman_collection.json) — коллекция запросов.
+- [`backend/postman/AutoRentKZ.postman_collection.json`](backend/postman/AutoRentKZ.postman_collection.json) — коллекция запросов.
 - Swagger UI — после запуска: `http://localhost:8080/swagger-ui.html`.
 
 ---
