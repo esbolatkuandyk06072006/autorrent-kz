@@ -56,7 +56,17 @@ public class SecurityConfig {
                                 "/h2-console/**",
                                 "/error"
                         ).permitAll()
+                        // Static SPA resources (built by Vite into src/main/resources/static)
+                        .requestMatchers(HttpMethod.GET,
+                                "/", "/index.html", "/assets/**", "/favicon.ico", "/favicon.svg").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/cars/**", "/api/v1/reviews/**").permitAll()
+                        // SPA pages (react-router) and their static assets
+                        .requestMatchers(HttpMethod.GET,
+                                "/", "/index.html", "/assets/**", "/favicon.ico", "/favicon.svg",
+                                "/cars", "/cars/**",
+                                "/login", "/register",
+                                "/my-reservations", "/profile",
+                                "/admin", "/admin/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
