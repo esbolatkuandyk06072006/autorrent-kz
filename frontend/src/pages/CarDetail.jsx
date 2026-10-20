@@ -2,10 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { apiGet, apiPost, apiPut, apiDelete } from '../api.js'
 import { useAuth } from '../AuthContext.jsx'
+import CarArt from '../components/CarArt.jsx'
 import { Alert, Spinner, StatusBadge } from '../components/ui.jsx'
 import {
   CAR_STATUS_LABELS,
-  CATEGORY_ICONS,
   CATEGORY_LABELS,
   FUEL_LABELS,
   REVIEW_STATUS_LABELS,
@@ -141,10 +141,7 @@ export default function CarDetail() {
     <div className="container section">
       <div className="detail-grid">
         <div className="card detail-main">
-          <div className={`car-visual car-visual-lg cat-${String(car.category).toLowerCase()}`}>
-            <span className="car-visual-icon">{CATEGORY_ICONS[car.category] || '🚗'}</span>
-            <span className="car-visual-plate">{car.licensePlate}</span>
-          </div>
+          <CarArt car={car} big />
           <h1 className="detail-title">
             {car.brand} {car.model} <span className="muted">{car.year}</span>
           </h1>

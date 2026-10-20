@@ -1,17 +1,45 @@
 import { Link } from 'react-router-dom'
-import { CATEGORY_ICONS, CATEGORY_LABELS, money } from '../utils.js'
+import CarArt from './CarArt.jsx'
+import { CATEGORY_LABELS, money } from '../utils.js'
+import { useLibrary } from '../LibraryContext.jsx'
 
-export default function CarCard({ car }) {
+export default function CarCard({ car, showRemoveFavorite = false, onRemoveFavorite }) {
+  const { isFavorite, toggleFavorite, inCompare, toggleCompare } = useLibrary()
+  const fav = isFavorite(car.id)
+  const cmp = inCompare(car.id)
+
   return (
     <article className="car-card">
-      <div className={`car-visual cat-${String(car.category).toLowerCase()}`}>
-        <span className="car-visual-icon">{CATEGORY_ICONS[car.category] || '🚗'}</span>
-        <span className="car-visual-plate">{car.licensePlate}</span>
+      <div className="car-card-media">
+        <Link to={`/cars/${car.id}`} tabIndex={-1} aria-hidden="true">
+          <CarArt car={car} />
+        </Link>
+        <div className="car-card-overlay">
+          <button
+            type="button"
+            className={`icon-btn ${fav ? 'icon-btn-on' : ''}`}
+            title={fav ? 'Убрать из избранного' : 'В избранное'}
+            onClick={() => toggleFavorite(car.id)}
+          >
+            {fav ? '❤️' : '🤍'}
+          </button>
+          <button
+            type="button"
+            className={`icon-btn ${cmp ? 'icon-btn-on' : ''}`}
+            title={cmp ? 'Убрать из сравнения' : 'К сравнению (до 3 машин)'}
+            onClick={() => toggleCompare(car.id)}
+          >
+            ⇄
+          </button>
+        </div>
+        {car.status !== 'ACTIVE' && <span className="car-card-status">недоступна</span>}
       </div>
       <div className="car-card-body">
         <div className="car-card-title">
           <h3>
-            {car.brand} {car.model}
+            <Link to={`/cars/${car.id}`}>
+              {car.brand} {car.model}
+            </Link>
           </h3>
           <span className="car-card-year">{car.year}</span>
         </div>
@@ -30,10 +58,15 @@ export default function CarCard({ car }) {
             <strong>{money(car.pricePerDay)}</strong>
             <span>/ день</span>
           </div>
-          <Link className="btn btn-primary" to={`/cars/${car.id}`}>
+          <Link className="btn btn-primary btn-sm" to={`/cars/${car.id}`}>
             Подробнее
           </Link>
         </div>
+        {showRemoveFavorite && (
+          <button className="btn btn-ghost btn-sm btn-block" onClick={onRemoveFavorite}>
+            🤍 Убрать из избранного
+          </button>
+        )}
       </div>
     </article>
   )

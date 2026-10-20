@@ -7,6 +7,10 @@ import Cars from './pages/Cars.jsx'
 import CarDetail from './pages/CarDetail.jsx'
 import MyReservations from './pages/MyReservations.jsx'
 import Profile from './pages/Profile.jsx'
+import Favorites from './pages/Favorites.jsx'
+import Compare from './pages/Compare.jsx'
+import Assistant from './pages/Assistant.jsx'
+import RoutesPage from './pages/Routes.jsx'
 import AdminPanel from './pages/admin/AdminPanel.jsx'
 
 function RequireAuth({ children, adminOnly = false }) {
@@ -43,6 +47,10 @@ export default function App() {
           <Route path="/cars/:id" element={<CarDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/compare" element={<Compare />} />
+          <Route path="/assistant" element={<Assistant />} />
+          <Route path="/routes" element={<RoutesPage />} />
           <Route
             path="/my-reservations"
             element={

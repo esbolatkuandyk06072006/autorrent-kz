@@ -92,7 +92,7 @@ a {
 .header-inner {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
   height: 64px;
 }
 
@@ -117,27 +117,64 @@ a {
 
 .nav {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.nav a {
+.nav::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
   color: #cbd5e1;
   text-decoration: none;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 0.95rem;
+  padding: 8px 13px;
+  border-radius: 9px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  white-space: nowrap;
   transition: background 0.15s, color 0.15s;
 }
 
-.nav a:hover {
+.nav-item:hover {
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
 }
 
-.nav a.active {
-  background: rgba(59, 130, 246, 0.2);
+.nav-item.active {
+  background: rgba(59, 130, 246, 0.22);
   color: #fff;
+  box-shadow: inset 0 -2px 0 #60a5fa;
+}
+
+.nav-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.nav-badge {
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+
+/* compact bottom tab bar (mobile) */
+.mobile-nav {
+  display: none;
 }
 
 .header-actions {
@@ -370,59 +407,73 @@ a {
   box-shadow: 0 10px 26px rgba(15, 23, 42, 0.12);
 }
 
-.car-visual {
-  height: 130px;
+.car-card-media {
+  position: relative;
+  line-height: 0;
+}
+
+.car-card-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
   display: flex;
+  gap: 6px;
+  line-height: normal;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+  cursor: pointer;
+  font-size: 1rem;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  transition: transform 0.12s, background 0.12s;
 }
 
-.car-visual-lg {
-  height: 220px;
-  border-radius: 12px;
-  margin-bottom: 16px;
+.icon-btn:hover {
+  transform: scale(1.1);
 }
 
-.cat-economy {
-  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+.icon-btn-on {
+  background: #fee2e2;
+  color: #ef4444;
 }
 
-.cat-comfort {
-  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-}
-
-.cat-suv {
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-}
-
-.cat-business {
-  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
-}
-
-.cat-electric {
-  background: linear-gradient(135deg, #ccfbf1, #99f6e4);
-}
-
-.car-visual-icon {
-  font-size: 3.2rem;
-}
-
-.car-visual-lg .car-visual-icon {
-  font-size: 5rem;
-}
-
-.car-visual-plate {
-  position: absolute;
-  bottom: 10px;
-  right: 12px;
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 6px;
-  padding: 2px 8px;
-  font-size: 0.78rem;
+.icon-btn-on:not(:first-child) {
+  background: #dbeafe;
+  color: #1d4ed8;
   font-weight: 700;
-  letter-spacing: 0.5px;
+}
+
+.car-card-status {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  line-height: normal;
+}
+
+.car-art {
+  width: 100%;
+  height: 150px;
+  display: block;
+  background: #e2e8f0;
+}
+
+.car-art-lg {
+  height: 260px;
+  border-radius: 12px;
 }
 
 .car-card-body {
@@ -916,7 +967,336 @@ a {
   color: #93c5fd;
 }
 
+/* ---------- Page head ---------- */
+
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* ---------- Assistant chat ---------- */
+
+.assistant .chat {
+  max-width: 860px;
+}
+
+.chat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 58vh;
+  overflow-y: auto;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+}
+
+.msg {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.msg-user {
+  justify-content: flex-end;
+}
+
+.msg-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.msg-bubble {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px 14px 14px 4px;
+  padding: 10px 14px;
+  max-width: 76%;
+  font-size: 0.95rem;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+}
+
+.msg-bubble p {
+  margin: 0 0 6px;
+}
+
+.msg-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.msg-user .msg-bubble {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  border-radius: 14px 14px 4px 14px;
+}
+
+.msg-typing {
+  display: inline-flex;
+  gap: 5px;
+  padding: 14px 16px;
+}
+
+.msg-typing span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #94a3b8;
+  animation: blink 1.2s infinite;
+}
+
+.msg-typing span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.msg-typing span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+.chat-cars {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 4px 0 0 44px;
+}
+
+.chat-car {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.chat-car:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.chat-car .car-art {
+  height: 96px;
+}
+
+.chat-car-body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.88rem;
+}
+
+.chat-car-price {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.chip {
+  border: 1px solid var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.12s;
+  font-family: inherit;
+}
+
+.chip:hover {
+  background: #dbeafe;
+}
+
+.chat-input {
+  display: flex;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.chat-input input:focus {
+  outline: 2px solid var(--primary);
+  border-color: var(--primary);
+}
+
+/* ---------- Routes ---------- */
+
+.routes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 16px;
+}
+
+.route-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.15s;
+}
+
+.route-card:hover {
+  transform: translateY(-3px);
+}
+
+.route-cover {
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+}
+
+.route-emoji {
+  font-size: 3rem;
+}
+
+.route-season {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.route-body {
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.route-body h3 {
+  font-size: 1.05rem;
+}
+
+.route-stats {
+  display: flex;
+  gap: 14px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.route-why {
+  font-size: 0.9rem;
+  margin: 0;
+  color: var(--text);
+}
+
+.route-highlights {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 0.86rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+/* ---------- Compare ---------- */
+
+.compare-table {
+  margin-top: 18px;
+}
+
+.compare-table th,
+.compare-table td {
+  min-width: 180px;
+  text-align: center;
+}
+
+.compare-label {
+  min-width: 130px !important;
+  text-align: left !important;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.compare-car {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.compare-car .car-art {
+  width: 170px;
+  height: 96px;
+  border-radius: 8px;
+}
+
 /* ---------- Responsive ---------- */
+
+@media (max-width: 1080px) {
+  .nav-label {
+    display: none;
+  }
+
+  .nav-item {
+    padding: 8px 11px;
+  }
+}
 
 @media (max-width: 860px) {
   .detail-grid {
@@ -935,8 +1315,51 @@ a {
   }
 
   .nav {
-    order: 3;
-    width: 100%;
+    display: none;
+  }
+
+  .mobile-nav {
+    display: flex;
+    justify-content: space-around;
+    background: #0f172a;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    position: sticky;
+    bottom: 0;
+    z-index: 50;
+  }
+
+  .mobile-nav-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.66rem;
+    padding: 4px 6px;
+    border-radius: 8px;
+    min-width: 56px;
+  }
+
+  .mobile-nav-item.active {
+    color: #93c5fd;
+    background: rgba(59, 130, 246, 0.16);
+  }
+
+  .mobile-nav-item .nav-icon {
+    font-size: 1.15rem;
+  }
+
+  .mobile-nav-item .nav-badge {
+    position: absolute;
+    top: -2px;
+    right: 4px;
+  }
+
+  .hero {
+    padding: 36px 0;
   }
 
   .hero h1 {
@@ -945,5 +1368,18 @@ a {
 
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  .chat-cars {
+    margin-left: 0;
+  }
+
+  .msg-bubble {
+    max-width: 88%;
+  }
+
+  .compare-table th,
+  .compare-table td {
+    min-width: 130px;
   }
 }

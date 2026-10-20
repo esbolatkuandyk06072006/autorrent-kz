@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { apiGet } from '../api.js'
 import CarCard from '../components/CarCard.jsx'
 import { Alert, EmptyState, Pagination, Spinner } from '../components/ui.jsx'
 import { CITIES, CATEGORY_LABELS, today, addDays } from '../utils.js'
 
 export default function Cars() {
+  const [searchParams] = useSearchParams()
+  const initialCategory = searchParams.get('category') || ''
   const [filters, setFilters] = useState({
     brand: '',
     city: '',
-    category: '',
+    category: initialCategory,
     maxPrice: '',
     startDate: '',
     endDate: ''
