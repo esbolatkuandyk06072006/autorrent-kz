@@ -1,11 +1,29 @@
+# Build artifacts
 target/
-!.mvn/wrapper/maven-wrapper.jar
+backend/target/
+backend/src/main/resources/static/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Logs and local env
+*.log
+logs/
+.env
+.attach_pid*
+
+# IDE
 .idea/
 *.iml
 .vscode/
-.env
-*.log
-logs/
-.attach_pid*
+.settings/
+.classpath
+.project
+
+# OS
 .DS_Store
 Thumbs.db
+
+# Maven wrapper exception (the jar, if present, must be committed)
+!.mvn/wrapper/maven-wrapper.jar
+!backend/.mvn/wrapper/maven-wrapper.jar

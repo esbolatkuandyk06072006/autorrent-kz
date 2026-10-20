@@ -15,8 +15,10 @@ services:
       timeout: 5s
       retries: 10
 
-  app:
-    build: .
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
       SPRING_PROFILES_ACTIVE: postgres
       DB_URL: jdbc:postgresql://db:5432/autorrent
