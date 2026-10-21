@@ -1286,6 +1286,49 @@ a {
   border-radius: 8px;
 }
 
+/* ---------- Error boundary ---------- */
+
+.error-boundary {
+  max-width: 520px;
+  margin: 40px auto;
+  text-align: center;
+}
+
+.error-boundary h3 {
+  color: var(--danger);
+}
+
+.error-details {
+  margin: 14px 0;
+  text-align: left;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+}
+
+.error-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.error-details pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 8px 0 0;
+  color: #7f1d1d;
+}
+
+.error-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 1080px) {

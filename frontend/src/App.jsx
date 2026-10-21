@@ -1,5 +1,6 @@
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import Header from './components/Header.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { useAuth } from './AuthContext.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
@@ -42,7 +43,8 @@ export default function App() {
     <div className="app">
       <Header />
       <main>
-        <Routes>
+        <ErrorBoundary>
+          <Routes>
           <Route path="/" element={<Cars />} />
           <Route path="/cars/:id" element={<CarDetail />} />
           <Route path="/login" element={<Login />} />
@@ -76,7 +78,8 @@ export default function App() {
             }
           />
           <Route path="*" element={<NotFound />} />
-        </Routes>
+          </Routes>
+        </ErrorBoundary>
       </main>
       <footer className="footer">
         <div className="container footer-inner">
