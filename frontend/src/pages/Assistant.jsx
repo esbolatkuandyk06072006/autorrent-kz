@@ -29,14 +29,14 @@ const FALLBACK_SUGGESTIONS = [
 // ---- Client-side fallback engine ------------------------------------------
 // Used when /api/v1/ai/chat is unreachable (no API key / backend down). It
 // parses budget, city and category out of the message and filters the real
-// catalog via GET /api/v1/cars, so the assistant keeps working offline.
+// catalog via GET /api/v1/vehicles, so the assistant keeps working offline.
 
 const CITY_HINTS = {
   Almaty: ['алмат', 'almaty'],
   Astana: ['астан', 'astana', 'нур-султан'],
   Shymkent: ['шымкент', 'shymkent'],
   Karaganda: ['караган', 'karaganda'],
-  Aktobe: ['актобе', 'aktobe']
+  Aktau: ['актау', 'aktau']
 }
 
 const CATEGORY_HINTS = {
@@ -44,7 +44,16 @@ const CATEGORY_HINTS = {
   ELECTRIC: ['электро', 'electric'],
   BUSINESS: ['бизнес', 'business', 'премиум'],
   ECONOMY: ['эконом', 'дешев'],
-  COMFORT: ['комфорт']
+  COMFORT: ['комфорт'],
+  LIGHT_TRUCK: ['газель'],
+  MEDIUM_TRUCK: ['грузовик', 'среднетоннаж'],
+  HEAVY_TRUCK: ['фур'],
+  DUMP_TRUCK: ['самосвал'],
+  EXCAVATOR: ['экскаватор'],
+  CRANE: ['кран'],
+  BULLDOZER: ['бульдозер'],
+  LOADER: ['погрузчик'],
+  CONCRETE_MIXER: ['бетономешал']
 }
 
 function parseFallback(message) {
@@ -80,7 +89,7 @@ async function fallbackRecommend(message) {
   if (budget) params.maxPrice = budget
 
   // Search active catalog with whatever criteria we could parse.
-  const data = await apiGet('/api/v1/cars', { ...params, size: 3, sortBy: 'pricePerDay', direction: 'asc' })
+  const data = await apiGet('/api/v1/vehicles', { ...params, size: 3, sortBy: 'pricePerDay', direction: 'asc' })
   const cars = (data?.content || []).filter((c) => c.status === 'ACTIVE')
 
   if (cars.length === 0) {

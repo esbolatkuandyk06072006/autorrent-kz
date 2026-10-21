@@ -1,11 +1,11 @@
 package kz.autorrent.service;
 
 import kz.autorrent.dto.ai.AiChatResponse;
-import kz.autorrent.dto.car.CarResponse;
-import kz.autorrent.entity.enums.CarCategory;
-import kz.autorrent.entity.enums.CarStatus;
+import kz.autorrent.dto.vehicle.VehicleResponse;
+import kz.autorrent.entity.enums.VehicleCategory;
+import kz.autorrent.entity.enums.VehicleStatus;
 import kz.autorrent.mapper.DtoMapper;
-import kz.autorrent.repository.CarRepository;
+import kz.autorrent.repository.VehicleRepository;
 import kz.autorrent.repository.ReviewRepository;
 import kz.autorrent.entity.enums.ReviewStatus;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +42,7 @@ public class AiAssistantService {
             "(\\d{4}-\\d{2}-\\d{2})\\s*(?:до|по|–|-|—)\\s*(\\d{4}-\\d{2}-\\d{2})");
 
     private static final Map<String, String> CITY_KEYWORDS = new LinkedHashMap<>();
-    private static final Map<String, CarCategory> CATEGORY_KEYWORDS = new LinkedHashMap<>();
+    private static final Map<String, VehicleCategory> CATEGORY_KEYWORDS = new LinkedHashMap<>();
 
     static {
         CITY_KEYWORDS.put("алмат", "Almaty");
@@ -54,24 +54,35 @@ public class AiAssistantService {
         CITY_KEYWORDS.put("shymkent", "Shymkent");
         CITY_KEYWORDS.put("караганда", "Karaganda");
         CITY_KEYWORDS.put("karaganda", "Karaganda");
-        CITY_KEYWORDS.put("актобе", "Aktobe");
-        CITY_KEYWORDS.put("aktobe", "Aktobe");
+        CITY_KEYWORDS.put("актау", "Aktau");
+        CITY_KEYWORDS.put("aktau", "Aktau");
 
-        CATEGORY_KEYWORDS.put("внедорожник", CarCategory.SUV);
-        CATEGORY_KEYWORDS.put("джип", CarCategory.SUV);
-        CATEGORY_KEYWORDS.put("suv", CarCategory.SUV);
-        CATEGORY_KEYWORDS.put("бизнес", CarCategory.BUSINESS);
-        CATEGORY_KEYWORDS.put("business", CarCategory.BUSINESS);
-        CATEGORY_KEYWORDS.put("премиум", CarCategory.BUSINESS);
-        CATEGORY_KEYWORDS.put("электро", CarCategory.ELECTRIC);
-        CATEGORY_KEYWORDS.put("электрич", CarCategory.ELECTRIC);
-        CATEGORY_KEYWORDS.put("electric", CarCategory.ELECTRIC);
-        CATEGORY_KEYWORDS.put("эконом", CarCategory.ECONOMY);
-        CATEGORY_KEYWORDS.put("дешев", CarCategory.ECONOMY);
-        CATEGORY_KEYWORDS.put("комфорт", CarCategory.COMFORT);
+        CATEGORY_KEYWORDS.put("внедорожник", VehicleCategory.SUV);
+        CATEGORY_KEYWORDS.put("джип", VehicleCategory.SUV);
+        CATEGORY_KEYWORDS.put("suv", VehicleCategory.SUV);
+        CATEGORY_KEYWORDS.put("бизнес", VehicleCategory.BUSINESS);
+        CATEGORY_KEYWORDS.put("business", VehicleCategory.BUSINESS);
+        CATEGORY_KEYWORDS.put("премиум", VehicleCategory.BUSINESS);
+        CATEGORY_KEYWORDS.put("электро", VehicleCategory.ELECTRIC);
+        CATEGORY_KEYWORDS.put("электрич", VehicleCategory.ELECTRIC);
+        CATEGORY_KEYWORDS.put("electric", VehicleCategory.ELECTRIC);
+        CATEGORY_KEYWORDS.put("эконом", VehicleCategory.ECONOMY);
+        CATEGORY_KEYWORDS.put("дешев", VehicleCategory.ECONOMY);
+        CATEGORY_KEYWORDS.put("комфорт", VehicleCategory.COMFORT);
+        // Грузовая техника
+        CATEGORY_KEYWORDS.put("газель", VehicleCategory.LIGHT_TRUCK);
+        CATEGORY_KEYWORDS.put("грузовик", VehicleCategory.MEDIUM_TRUCK);
+        CATEGORY_KEYWORDS.put("фур", VehicleCategory.HEAVY_TRUCK);
+        CATEGORY_KEYWORDS.put("самосвал", VehicleCategory.DUMP_TRUCK);
+        // Спецтехника
+        CATEGORY_KEYWORDS.put("экскаватор", VehicleCategory.EXCAVATOR);
+        CATEGORY_KEYWORDS.put("кран", VehicleCategory.CRANE);
+        CATEGORY_KEYWORDS.put("бульдозер", VehicleCategory.BULLDOZER);
+        CATEGORY_KEYWORDS.put("погрузчик", VehicleCategory.LOADER);
+        CATEGORY_KEYWORDS.put("бетономешал", VehicleCategory.CONCRETE_MIXER);
     }
 
-    private final CarRepository carRepository;
+    private final VehicleRepository vehicleRepository;
     private final ReviewRepository reviewRepository;
 
     @Transactional(readOnly = true)
@@ -88,7 +99,7 @@ public class AiAssistantService {
         // 2. Parse search criteria: budget, city, category, date range
         BigDecimal budget = extractBudget(normalized);
         String city = extractCity(normalized);
-        CarCategory category = extractCategory(normalized);
+        VehicleCategory category = extractCategory(normalized);
         Matcher dates = DATE_RANGE_PATTERN.matcher(normalized);
 
         boolean greeting = containsAny(normalized, "привет", "здравств", "салам", "сәлем", "hello");
@@ -103,27 +114,27 @@ public class AiAssistantService {
         }
 
         // 3. Search the catalogue with the parsed criteria
-        List<CarResponse> cars = searchCars(budget, city, category);
+        List<VehicleResponse> cars = searchVehicles(budget, city, category);
         String reply = buildReply(cars, budget, city, category, greeting);
         return new AiChatResponse(reply, defaultSuggestions(), cars);
     }
 
-    private List<CarResponse> searchCars(BigDecimal budget, String city, CarCategory category) {
-        Page<kz.autorrent.entity.Car> page = carRepository.search(
-                CarStatus.ACTIVE, null, city, category, budget,
+    private List<VehicleResponse> searchVehicles(BigDecimal budget, String city, VehicleCategory category) {
+        Page<kz.autorrent.entity.Vehicle> page = vehicleRepository.search(
+                VehicleStatus.ACTIVE, null, null, city, category, budget, null, null,
                 PageRequest.of(0, 3, Sort.by("pricePerDay").ascending()));
 
-        List<CarResponse> result = new ArrayList<>();
-        for (kz.autorrent.entity.Car car : page.getContent()) {
-            Double rating = reviewRepository.averageRating(car.getId(), ReviewStatus.VISIBLE);
-            long reviewCount = reviewRepository.countByReservationCarIdAndStatus(car.getId(), ReviewStatus.VISIBLE);
-            result.add(DtoMapper.toCarResponse(car, rating, reviewCount));
+        List<VehicleResponse> result = new ArrayList<>();
+        for (kz.autorrent.entity.Vehicle vehicle : page.getContent()) {
+            Double rating = reviewRepository.averageRating(vehicle.getId(), ReviewStatus.VISIBLE);
+            long reviewCount = reviewRepository.countByReservationVehicleIdAndStatus(vehicle.getId(), ReviewStatus.VISIBLE);
+            result.add(DtoMapper.toVehicleResponse(vehicle, rating, reviewCount));
         }
         return result;
     }
 
-    private String buildReply(List<CarResponse> cars, BigDecimal budget,
-                              String city, CarCategory category, boolean greeting) {
+    private String buildReply(List<VehicleResponse> cars, BigDecimal budget,
+                              String city, VehicleCategory category, boolean greeting) {
         StringBuilder sb = new StringBuilder();
         if (greeting) {
             sb.append("Сәлем! Я AI-консультант AutoRent KZ. ");
@@ -142,7 +153,7 @@ public class AiAssistantService {
         if (budget != null) sb.append(", до ").append(budget).append(" ₸/день");
         sb.append(". Вот лучшие:\n");
         for (int i = 0; i < cars.size(); i++) {
-            CarResponse c = cars.get(i);
+            VehicleResponse c = cars.get(i);
             sb.append(i + 1).append(") ").append(c.brand()).append(' ').append(c.model())
                     .append(" (").append(c.year()).append(") — ").append(c.pricePerDay()).append(" ₸/день");
             if (c.averageRating() != null) {
@@ -200,7 +211,7 @@ public class AiAssistantService {
             case "Astana" -> "Астана";
             case "Shymkent" -> "Шымкент";
             case "Karaganda" -> "Караганда";
-            case "Aktobe" -> "Актобе";
+            case "Aktau" -> "Актау";
             default -> city;
         };
     }
@@ -238,8 +249,8 @@ public class AiAssistantService {
         return null;
     }
 
-    private CarCategory extractCategory(String normalized) {
-        for (Map.Entry<String, CarCategory> entry : CATEGORY_KEYWORDS.entrySet()) {
+    private VehicleCategory extractCategory(String normalized) {
+        for (Map.Entry<String, VehicleCategory> entry : CATEGORY_KEYWORDS.entrySet()) {
             if (normalized.contains(entry.getKey())) {
                 return entry.getValue();
             }

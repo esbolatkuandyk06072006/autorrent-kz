@@ -5,11 +5,14 @@ import { Alert, EmptyState, Modal, Pagination, Spinner, StatusBadge } from '../.
 import {
   CAR_STATUS_LABELS,
   CITIES,
+  CATEGORY_GROUPS,
   CATEGORY_LABELS,
   FUEL_LABELS,
+  LICENSE_LABELS,
   RESERVATION_STATUS_LABELS,
   REVIEW_STATUS_LABELS,
   TRANSMISSION_LABELS,
+  VEHICLE_TYPE_LABELS,
   dateLabel,
   money,
   today
@@ -20,10 +23,16 @@ const EMPTY_CAR = {
   model: '',
   year: 2024,
   licensePlate: '',
+  type: 'PASSENGER',
   category: 'COMFORT',
   transmission: 'AUTOMATIC',
   fuelType: 'PETROL',
   seats: 5,
+  capacity: '',
+  requiredLicense: 'B',
+  withOperator: false,
+  operatorPricePerDay: '',
+  pricePerHour: '',
   pricePerDay: 20000,
   city: 'Almaty',
   description: '',
@@ -66,7 +75,7 @@ function AdminCars() {
     setLoading(true)
     setError(null)
     try {
-      setData(await apiGet('/api/v1/cars', { page, size: 10, sortBy: 'id', direction: 'asc' }))
+      setData(await apiGet('/api/v1/vehicles', { page, size: 10, sortBy: 'id', direction: 'asc' }))
     } catch (err) {
       setError(err.message)
     } finally {
@@ -85,7 +94,14 @@ function AdminCars() {
   }
 
   const openEdit = (car) => {
-    setForm({ ...car, pricePerDay: Number(car.pricePerDay) })
+    setForm({
+      ...car,
+      pricePerDay: Number(car.pricePerDay),
+      capacity: car.capacity ?? '',
+      operatorPricePerDay: car.operatorPricePerDay ?? '',
+      pricePerHour: car.pricePerHour ?? '',
+      withOperator: !!car.withOperator
+    })
     setEditing(car)
     setMessage(null)
   }
@@ -94,14 +110,23 @@ function AdminCars() {
     e.preventDefault()
     setBusy(true)
     setMessage(null)
-    const payload = { ...form, year: Number(form.year), seats: Number(form.seats), pricePerDay: Number(form.pricePerDay) }
+    const payload = {
+      ...form,
+      year: Number(form.year),
+      pricePerDay: Number(form.pricePerDay),
+      seats: form.seats === '' ? null : Number(form.seats),
+      capacity: form.capacity === '' ? null : Number(form.capacity),
+      operatorPricePerDay: form.operatorPricePerDay === '' ? null : Number(form.operatorPricePerDay),
+      pricePerHour: form.pricePerHour === '' ? null : Number(form.pricePerHour),
+      withOperator: !!form.withOperator
+    }
     try {
       if (editing === 'new') {
-        await apiPost('/api/v1/cars', payload)
-        setMessage({ kind: 'success', text: 'Автомобиль добавлен.' })
+        await apiPost('/api/v1/vehicles', payload)
+        setMessage({ kind: 'success', text: 'Техника добавлена.' })
       } else {
-        await apiPut(`/api/v1/cars/${editing.id}`, payload)
-        setMessage({ kind: 'success', text: 'Автомобиль обновлён.' })
+        await apiPut(`/api/v1/vehicles/${editing.id}`, payload)
+        setMessage({ kind: 'success', text: 'Техника обновлена.' })
       }
       setEditing(null)
       load()
@@ -119,7 +144,7 @@ function AdminCars() {
 
   const changeStatus = async (car, status) => {
     try {
-      await apiPatch(`/api/v1/cars/${car.id}/status`, { status })
+      await apiPatch(`/api/v1/vehicles/${car.id}/status`, { status })
       setMessage({ kind: 'success', text: `Статус «${car.brand} ${car.model}» → ${CAR_STATUS_LABELS[status]}.` })
       load()
     } catch (err) {
@@ -130,10 +155,10 @@ function AdminCars() {
   const remove = async (car) => {
     if (!window.confirm(`Удалить ${car.brand} ${car.model} (${car.licensePlate})?`)) return
     try {
-      await apiDelete(`/api/v1/cars/${car.id}`)
+      await apiDelete(`/api/v1/vehicles/${car.id}`)
       setMessage({
         kind: 'success',
-        text: 'Автомобиль удалён. Если по нему были брони — он переведён в архив.'
+        text: 'Техника удалена. Если по ней были брони — она переведена в архив.'
       })
       load()
     } catch (err) {
@@ -141,7 +166,30 @@ function AdminCars() {
     }
   }
 
-  const update = (key) => (e) => setForm({ ...form, [key]: e.target.value })
+  const update = (key) => (e) => {
+    const value = e.target.value
+    if (key === 'type') {
+      // При смене группы подбираем первую подкатегорию и сбрасываем зависимые поля.
+      const firstCat = (CATEGORY_GROUPS[value] || [])[0] || ''
+      setForm((f) => ({
+        ...f,
+        type: value,
+        category: firstCat,
+        capacity: '',
+        withOperator: false,
+        operatorPricePerDay: '',
+        pricePerHour: '',
+        requiredLicense: value === 'PASSENGER' ? 'B' : value === 'CARGO' ? 'C' : 'SPECIAL'
+      }))
+    } else if (key === 'withOperator') {
+      setForm((f) => ({ ...f, withOperator: e.target.checked }))
+    } else {
+      setForm({ ...form, [key]: value })
+    }
+  }
+
+  const isPassenger = form.type === 'PASSENGER'
+  const categoryChoices = CATEGORY_GROUPS[form.type] || Object.keys(CATEGORY_LABELS)
 
   return (
     <>
@@ -237,9 +285,9 @@ function AdminCars() {
             </div>
             <div className="form-row">
               <label>
-                Категория
-                <select value={form.category} onChange={update('category')}>
-                  {Object.entries(CATEGORY_LABELS).map(([v, l]) => (
+                Группа
+                <select value={form.type} onChange={update('type')}>
+                  {Object.entries(VEHICLE_TYPE_LABELS).map(([v, l]) => (
                     <option key={v} value={v}>
                       {l}
                     </option>
@@ -247,11 +295,11 @@ function AdminCars() {
                 </select>
               </label>
               <label>
-                Город
-                <select value={form.city} onChange={update('city')}>
-                  {CITIES.map((city) => (
-                    <option key={city} value={city}>
-                      {city}
+                Категория
+                <select value={form.category} onChange={update('category')}>
+                  {categoryChoices.map((v) => (
+                    <option key={v} value={v}>
+                      {CATEGORY_LABELS[v]}
                     </option>
                   ))}
                 </select>
@@ -280,15 +328,68 @@ function AdminCars() {
               </label>
             </div>
             <div className="form-row">
+              {isPassenger ? (
+                <label>
+                  Мест
+                  <input type="number" min="2" max="9" value={form.seats} onChange={update('seats')} />
+                </label>
+              ) : (
+                <label>
+                  Грузоподъёмность, т
+                  <input type="number" min="0" step="0.1" value={form.capacity} onChange={update('capacity')} placeholder="Например: 5" />
+                </label>
+              )}
               <label>
-                Мест
-                <input type="number" min="2" max="9" required value={form.seats} onChange={update('seats')} />
+                Права / удостоверение
+                <select value={form.requiredLicense} onChange={update('requiredLicense')}>
+                  {Object.entries(LICENSE_LABELS).map(([v, l]) => (
+                    <option key={v} value={v}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
               </label>
+            </div>
+            {!isPassenger && (
+              <div className="form-row">
+                <label className="checkbox-label">
+                  <input type="checkbox" checked={!!form.withOperator} onChange={update('withOperator')} />
+                  Аренда с оператором
+                </label>
+                <label>
+                  Цена с оператором, ₸/день
+                  <input
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    value={form.operatorPricePerDay}
+                    onChange={update('operatorPricePerDay')}
+                    disabled={!form.withOperator}
+                    placeholder="0"
+                  />
+                </label>
+              </div>
+            )}
+            <div className="form-row">
               <label>
                 Цена за день, ₸
                 <input type="number" min="1" step="0.01" required value={form.pricePerDay} onChange={update('pricePerDay')} />
               </label>
+              <label>
+                Цена за час, ₸ {form.type === 'SPECIAL' ? '' : '(необязательно)'}
+                <input type="number" min="1" step="0.01" value={form.pricePerHour} onChange={update('pricePerHour')} placeholder="0" />
+              </label>
             </div>
+            <label>
+              Город
+              <select value={form.city} onChange={update('city')}>
+                {CITIES.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label>
               Описание
               <textarea rows={3} maxLength={2000} value={form.description || ''} onChange={update('description')} />

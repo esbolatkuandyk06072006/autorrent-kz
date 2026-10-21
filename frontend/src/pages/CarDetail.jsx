@@ -8,8 +8,10 @@ import {
   CAR_STATUS_LABELS,
   CATEGORY_LABELS,
   FUEL_LABELS,
+  LICENSE_LABELS,
   REVIEW_STATUS_LABELS,
   TRANSMISSION_LABELS,
+  VEHICLE_TYPE_LABELS,
   addDays,
   dateLabel,
   money,
@@ -41,8 +43,8 @@ export default function CarDetail() {
     setError(null)
     try {
       const [carData, reviewsData] = await Promise.all([
-        apiGet(`/api/v1/cars/${id}`),
-        apiGet(`/api/v1/cars/${id}/reviews`, { page: 0, size: 10 })
+        apiGet(`/api/v1/vehicles/${id}`),
+        apiGet(`/api/v1/vehicles/${id}/reviews`, { page: 0, size: 10 })
       ])
       setCar(carData)
       setReviews(reviewsData?.content || [])
@@ -146,10 +148,19 @@ export default function CarDetail() {
             {car.brand} {car.model} <span className="muted">{car.year}</span>
           </h1>
           <div className="detail-badges">
+            <span className="badge badge-soft">{VEHICLE_TYPE_LABELS[car.type] || car.type}</span>
             <span className="badge badge-soft">{CATEGORY_LABELS[car.category]}</span>
             <span className="badge badge-soft">{TRANSMISSION_LABELS[car.transmission]}</span>
             <span className="badge badge-soft">{FUEL_LABELS[car.fuelType]}</span>
-            <span className="badge badge-soft">👥 {car.seats} мест</span>
+            {car.type === 'PASSENGER' ? (
+              <span className="badge badge-soft">👥 {car.seats} мест</span>
+            ) : (
+              car.capacity != null && <span className="badge badge-soft">⚖ {car.capacity} т</span>
+            )}
+            {car.requiredLicense && (
+              <span className="badge badge-soft">🪪 {LICENSE_LABELS[car.requiredLicense] || car.requiredLicense}</span>
+            )}
+            {car.withOperator && <span className="badge badge-soft">👷 с оператором</span>}
             <span className="badge badge-soft">📍 {car.city}</span>
             <StatusBadge value={car.status} labels={CAR_STATUS_LABELS} />
           </div>
@@ -165,6 +176,16 @@ export default function CarDetail() {
           <div className="detail-price">
             <strong>{money(car.pricePerDay)}</strong>
             <span>в сутки</span>
+            {car.pricePerHour && (
+              <span className="muted" style={{ display: 'block', fontSize: '0.85rem' }}>
+                {money(car.pricePerHour)} в час
+              </span>
+            )}
+            {car.withOperator && car.operatorPricePerDay && (
+              <span className="muted" style={{ display: 'block', fontSize: '0.85rem' }}>
+                с оператором: {money(car.operatorPricePerDay)}/сутки
+              </span>
+            )}
           </div>
 
           {car.status === 'ACTIVE' ? (

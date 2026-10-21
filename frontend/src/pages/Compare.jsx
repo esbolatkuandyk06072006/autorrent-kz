@@ -8,18 +8,25 @@ import {
   CAR_STATUS_LABELS,
   CATEGORY_LABELS,
   FUEL_LABELS,
+  LICENSE_LABELS,
   TRANSMISSION_LABELS,
+  VEHICLE_TYPE_LABELS,
   money,
   dateLabel
 } from '../utils.js'
 
 const ROWS = [
   { label: 'Цена за день', render: (c) => money(c.pricePerDay) },
+  { label: 'Цена за час', render: (c) => (c.pricePerHour ? money(c.pricePerHour) : '—') },
+  { label: 'Группа', render: (c) => (c.type ? VEHICLE_TYPE_LABELS[c.type] || c.type : '—') },
   { label: 'Категория', render: (c) => CATEGORY_LABELS[c.category] || c.category },
   { label: 'Год выпуска', render: (c) => c.year },
   { label: 'Коробка', render: (c) => TRANSMISSION_LABELS[c.transmission] || c.transmission },
   { label: 'Топливо', render: (c) => FUEL_LABELS[c.fuelType] || c.fuelType },
-  { label: 'Мест', render: (c) => c.seats },
+  { label: 'Мест', render: (c) => c.seats ?? '—' },
+  { label: 'Грузоподъёмность', render: (c) => (c.capacity != null ? `${c.capacity} т` : '—') },
+  { label: 'Права', render: (c) => (c.requiredLicense ? LICENSE_LABELS[c.requiredLicense] || c.requiredLicense : '—') },
+  { label: 'Оператор', render: (c) => (c.withOperator ? (c.operatorPricePerDay ? `да (${money(c.operatorPricePerDay)}/дн)` : 'да') : 'нет') },
   { label: 'Город', render: (c) => c.city },
   { label: 'Номер', render: (c) => c.licensePlate },
   {
@@ -41,7 +48,7 @@ export default function Compare() {
       return
     }
     setLoading(true)
-    Promise.allSettled(compare.map((id) => apiGet(`/api/v1/cars/${id}`)))
+    Promise.allSettled(compare.map((id) => apiGet(`/api/v1/vehicles/${id}`)))
       .then((results) => {
         if (!alive) return
         const byId = new Map(results.filter((r) => r.status === 'fulfilled').map((r) => [r.value.id, r.value]))

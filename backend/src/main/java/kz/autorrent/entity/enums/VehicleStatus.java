@@ -1,6 +1,6 @@
 package kz.autorrent.entity.enums;
 
-public enum CarStatus {
+public enum VehicleStatus {
     ACTIVE,
     MAINTENANCE,
     ARCHIVED

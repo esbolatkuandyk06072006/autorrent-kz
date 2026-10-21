@@ -1,6 +1,6 @@
 package kz.autorrent.service;
 
-import kz.autorrent.entity.Car;
+import kz.autorrent.entity.Vehicle;
 import kz.autorrent.entity.Reservation;
 import kz.autorrent.entity.User;
 import kz.autorrent.entity.enums.ReservationStatus;
@@ -13,13 +13,13 @@ import java.time.LocalDate;
 public class ReservationFactory {
 
     public Reservation create(User user,
-                              Car car,
+                              Vehicle vehicle,
                               LocalDate startDate,
                               LocalDate endDate,
                               PricingResult pricing) {
         return Reservation.builder()
                 .user(user)
-                .car(car)
+                .vehicle(vehicle)
                 .startDate(startDate)
                 .endDate(endDate)
                 .daysCount(pricing.days())

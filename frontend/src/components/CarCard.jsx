@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom'
 import CarArt from './CarArt.jsx'
-import { CATEGORY_LABELS, money } from '../utils.js'
+import { CATEGORY_LABELS, LICENSE_LABELS, VEHICLE_TYPE_LABELS, money } from '../utils.js'
 import { useLibrary } from '../LibraryContext.jsx'
 
 export default function CarCard({ car, showRemoveFavorite = false, onRemoveFavorite }) {
   const { isFavorite, toggleFavorite, inCompare, toggleCompare } = useLibrary()
   const fav = isFavorite(car.id)
   const cmp = inCompare(car.id)
+  const isPassenger = car.type === 'PASSENGER'
 
   return (
     <article className="car-card">
@@ -46,8 +47,18 @@ export default function CarCard({ car, showRemoveFavorite = false, onRemoveFavor
         <div className="car-card-meta">
           <span>📍 {car.city}</span>
           <span>🏷 {CATEGORY_LABELS[car.category] || car.category}</span>
-          <span>👥 {car.seats}</span>
+          {isPassenger ? (
+            <span>👥 {car.seats}</span>
+          ) : (
+            <span>⚖ {car.capacity != null ? `${car.capacity} т` : '—'}</span>
+          )}
         </div>
+        {(car.requiredLicense || car.withOperator) && (
+          <div className="car-card-meta">
+            {car.requiredLicense && <span>🪪 {LICENSE_LABELS[car.requiredLicense] || car.requiredLicense}</span>}
+            {car.withOperator && <span>👷 с оператором</span>}
+          </div>
+        )}
         {car.averageRating != null && (
           <div className="car-card-rating">
             ⭐ {Number(car.averageRating).toFixed(1)} · отзывов: {car.reviewCount}
@@ -56,7 +67,10 @@ export default function CarCard({ car, showRemoveFavorite = false, onRemoveFavor
         <div className="car-card-footer">
           <div className="car-price">
             <strong>{money(car.pricePerDay)}</strong>
-            <span>/ день</span>
+            <span>/ {car.pricePerHour ? 'день' : 'день'}</span>
+            {car.pricePerHour && (
+              <span className="muted"> · {money(car.pricePerHour)}/час</span>
+            )}
           </div>
           <Link className="btn btn-primary btn-sm" to={`/cars/${car.id}`}>
             Подробнее

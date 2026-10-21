@@ -3,16 +3,16 @@ package kz.autorrent.service;
 import kz.autorrent.dto.common.PageResponse;
 import kz.autorrent.dto.reservation.ReservationResponse;
 import kz.autorrent.dto.reservation.ReservationUpdateRequest;
-import kz.autorrent.entity.Car;
+import kz.autorrent.entity.Vehicle;
 import kz.autorrent.entity.Reservation;
 import kz.autorrent.entity.User;
-import kz.autorrent.entity.enums.CarStatus;
+import kz.autorrent.entity.enums.VehicleStatus;
 import kz.autorrent.entity.enums.ReservationStatus;
 import kz.autorrent.entity.enums.Role;
 import kz.autorrent.exception.ConflictException;
 import kz.autorrent.exception.NotFoundException;
 import kz.autorrent.mapper.DtoMapper;
-import kz.autorrent.repository.CarRepository;
+import kz.autorrent.repository.VehicleRepository;
 import kz.autorrent.repository.ReservationRepository;
 import kz.autorrent.repository.ReviewRepository;
 import kz.autorrent.repository.UserRepository;
@@ -32,7 +32,7 @@ import java.time.LocalDate;
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
-    private final CarRepository carRepository;
+    private final VehicleRepository vehicleRepository;
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final PricingStrategyResolver pricingStrategyResolver;
@@ -93,26 +93,26 @@ public class ReservationService {
 
         BookingRules.validateDates(request.startDate(), request.endDate());
 
-        Car car = carRepository.findByIdForUpdate(reservation.getCar().getId())
-                .orElseThrow(() -> new NotFoundException("Car not found"));
-        if (car.getStatus() != CarStatus.ACTIVE) {
-            throw new ConflictException("Car is not available for booking");
+        Vehicle vehicle = vehicleRepository.findByIdForUpdate(reservation.getVehicle().getId())
+                .orElseThrow(() -> new NotFoundException("Vehicle not found"));
+        if (vehicle.getStatus() != VehicleStatus.ACTIVE) {
+            throw new ConflictException("Vehicle is not available for booking");
         }
 
         long conflicts = reservationRepository.countOverlappingExcluding(
-                car.getId(),
+                vehicle.getId(),
                 reservation.getId(),
                 request.startDate(),
                 request.endDate(),
                 BookingRules.ACTIVE_STATUSES
         );
         if (conflicts > 0) {
-            throw new ConflictException("Car is not available for the selected dates");
+            throw new ConflictException("Vehicle is not available for the selected dates");
         }
 
         long days = BookingRules.daysBetween(request.startDate(), request.endDate());
         PricingResult pricing = pricingStrategyResolver.resolve(days)
-                .calculate(car.getPricePerDay(), days);
+                .calculate(vehicle.getPricePerDay(), days);
 
         reservation.setStartDate(request.startDate());
         reservation.setEndDate(request.endDate());
@@ -136,8 +136,8 @@ public class ReservationService {
                     + current + " to " + newStatus);
         }
         if (newStatus == ReservationStatus.CONFIRMED
-                && reservation.getCar().getStatus() != CarStatus.ACTIVE) {
-            throw new ConflictException("Car is not active and cannot be confirmed");
+                && reservation.getVehicle().getStatus() != VehicleStatus.ACTIVE) {
+            throw new ConflictException("Vehicle is not active and cannot be confirmed");
         }
         if (newStatus == ReservationStatus.COMPLETED
                 && reservation.getEndDate().isAfter(LocalDate.now())) {

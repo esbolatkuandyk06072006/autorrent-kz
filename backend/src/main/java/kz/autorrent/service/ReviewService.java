@@ -12,7 +12,7 @@ import kz.autorrent.entity.enums.Role;
 import kz.autorrent.exception.ConflictException;
 import kz.autorrent.exception.NotFoundException;
 import kz.autorrent.mapper.DtoMapper;
-import kz.autorrent.repository.CarRepository;
+import kz.autorrent.repository.VehicleRepository;
 import kz.autorrent.repository.ReservationRepository;
 import kz.autorrent.repository.ReviewRepository;
 import kz.autorrent.security.CustomUserDetails;
@@ -28,7 +28,7 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final ReservationRepository reservationRepository;
-    private final CarRepository carRepository;
+    private final VehicleRepository vehicleRepository;
 
     @Transactional
     public ReviewResponse create(String email, ReviewRequest request) {
@@ -56,12 +56,12 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<ReviewResponse> getByCar(Long carId, Pageable pageable) {
-        if (!carRepository.existsById(carId)) {
-            throw new NotFoundException("Car not found: " + carId);
+    public PageResponse<ReviewResponse> getByCar(Long vehicleId, Pageable pageable) {
+        if (!vehicleRepository.existsById(vehicleId)) {
+            throw new NotFoundException("Vehicle not found: " + vehicleId);
         }
         return PageResponse.from(reviewRepository
-                .findByCarIdAndStatusWithDetails(carId, ReviewStatus.VISIBLE, pageable)
+                .findByVehicleIdAndStatusWithDetails(vehicleId, ReviewStatus.VISIBLE, pageable)
                 .map(DtoMapper::toReviewResponse));
     }
 

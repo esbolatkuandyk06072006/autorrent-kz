@@ -2,13 +2,13 @@ package kz.autorrent.service;
 
 import kz.autorrent.dto.review.ReviewRequest;
 import kz.autorrent.dto.review.ReviewResponse;
-import kz.autorrent.entity.Car;
+import kz.autorrent.entity.Vehicle;
 import kz.autorrent.entity.Reservation;
 import kz.autorrent.entity.Review;
 import kz.autorrent.entity.User;
 import kz.autorrent.entity.enums.*;
 import kz.autorrent.exception.ConflictException;
-import kz.autorrent.repository.CarRepository;
+import kz.autorrent.repository.VehicleRepository;
 import kz.autorrent.repository.ReservationRepository;
 import kz.autorrent.repository.ReviewRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +36,7 @@ class ReviewServiceTest {
     @Mock
     private ReservationRepository reservationRepository;
     @Mock
-    private CarRepository carRepository;
+    private VehicleRepository vehicleRepository;
 
     @InjectMocks
     private ReviewService reviewService;
@@ -54,25 +54,26 @@ class ReviewServiceTest {
                 .role(Role.USER)
                 .build();
 
-        Car car = Car.builder()
+        Vehicle vehicle = Vehicle.builder()
                 .id(1L)
                 .brand("Toyota")
                 .model("Camry")
                 .year(2023)
                 .licensePlate("123ABC01")
-                .category(CarCategory.COMFORT)
+                .category(VehicleCategory.COMFORT)
+                .type(VehicleType.PASSENGER)
                 .transmission(Transmission.AUTOMATIC)
                 .fuelType(FuelType.PETROL)
                 .seats(5)
                 .pricePerDay(new BigDecimal("20000.00"))
                 .city("Almaty")
-                .status(CarStatus.ACTIVE)
+                .status(VehicleStatus.ACTIVE)
                 .build();
 
         reservation = Reservation.builder()
                 .id(1L)
                 .user(user)
-                .car(car)
+                .vehicle(vehicle)
                 .startDate(LocalDate.now().minusDays(10))
                 .endDate(LocalDate.now().minusDays(6))
                 .daysCount(4)

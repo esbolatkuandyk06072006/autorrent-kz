@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reservations", indexes = {
-        @Index(name = "idx_reservations_car_dates", columnList = "car_id, start_date, end_date"),
+        @Index(name = "idx_reservations_vehicle_dates", columnList = "vehicle_id, start_date, end_date"),
         @Index(name = "idx_reservations_user", columnList = "user_id"),
         @Index(name = "idx_reservations_status", columnList = "status")
 })
@@ -32,8 +32,8 @@ public class Reservation {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "car_id", nullable = false)
-    private Car car;
+    @JoinColumn(name = "vehicle_id", nullable = false)
+    private Vehicle vehicle;
 
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;

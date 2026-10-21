@@ -17,7 +17,7 @@ export default function Favorites() {
       return
     }
     setLoading(true)
-    Promise.allSettled(favorites.map((id) => apiGet(`/api/v1/cars/${id}`)))
+    Promise.allSettled(favorites.map((id) => apiGet(`/api/v1/vehicles/${id}`)))
       .then((results) => {
         if (!alive) return
         setCars(results.filter((r) => r.status === 'fulfilled').map((r) => r.value))

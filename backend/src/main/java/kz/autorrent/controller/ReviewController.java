@@ -22,7 +22,7 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
-    @GetMapping("/cars/{carId}/reviews")
+    @GetMapping({"/cars/{carId}/reviews", "/vehicles/{carId}/reviews"})
     public PageResponse<ReviewResponse> getByCar(
             @PathVariable Long carId,
             @RequestParam(defaultValue = "0") int page,

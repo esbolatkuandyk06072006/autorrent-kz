@@ -1,9 +1,45 @@
+// Группа техники (легковые / грузовые / спецтехника) — первый уровень фильтра.
+export const VEHICLE_TYPE_LABELS = {
+  PASSENGER: 'Легковые',
+  CARGO: 'Грузовые',
+  SPECIAL: 'Спецтехника'
+}
+
+export const VEHICLE_TYPE_ICONS = {
+  PASSENGER: '🚗',
+  CARGO: '🚚',
+  SPECIAL: '🏗'
+}
+
+// Подкатегории, сгруппированные по группе техники.
+export const CATEGORY_GROUPS = {
+  PASSENGER: ['ECONOMY', 'COMFORT', 'BUSINESS', 'SUV', 'ELECTRIC'],
+  CARGO: ['LIGHT_TRUCK', 'MEDIUM_TRUCK', 'HEAVY_TRUCK', 'DUMP_TRUCK'],
+  SPECIAL: ['EXCAVATOR', 'CRANE', 'BULLDOZER', 'LOADER', 'CONCRETE_MIXER']
+}
+
 export const CATEGORY_LABELS = {
   ECONOMY: 'Эконом',
   COMFORT: 'Комфорт',
   SUV: 'Внедорожник',
   BUSINESS: 'Бизнес',
-  ELECTRIC: 'Электро'
+  ELECTRIC: 'Электро',
+  LIGHT_TRUCK: 'Газель (до 1.5 т)',
+  MEDIUM_TRUCK: 'Средний (1.5–5 т)',
+  HEAVY_TRUCK: 'Фура (5+ т)',
+  DUMP_TRUCK: 'Самосвал',
+  EXCAVATOR: 'Экскаватор',
+  CRANE: 'Автокран',
+  BULLDOZER: 'Бульдозер',
+  LOADER: 'Погрузчик',
+  CONCRETE_MIXER: 'Бетономешалка'
+}
+
+export const LICENSE_LABELS = {
+  B: 'Права категории B',
+  C: 'Права категории C',
+  E: 'Права категории E',
+  SPECIAL: 'Спецудостоверение'
 }
 
 export const TRANSMISSION_LABELS = {
@@ -41,10 +77,19 @@ export const CATEGORY_ICONS = {
   COMFORT: '🚙',
   SUV: '🚜',
   BUSINESS: '🚘',
-  ELECTRIC: '⚡'
+  ELECTRIC: '⚡',
+  LIGHT_TRUCK: '🚐',
+  MEDIUM_TRUCK: '🚚',
+  HEAVY_TRUCK: '🚛',
+  DUMP_TRUCK: '⛏',
+  EXCAVATOR: '🏗',
+  CRANE: '🏗',
+  BULLDOZER: '🚜',
+  LOADER: '🚜',
+  CONCRETE_MIXER: '🚚'
 }
 
-export const CITIES = ['Almaty', 'Astana', 'Shymkent', 'Karaganda', 'Aktobe']
+export const CITIES = ['Almaty', 'Astana', 'Shymkent', 'Karaganda', 'Aktau']
 
 export const money = (value) => {
   if (value === null || value === undefined) return '—'

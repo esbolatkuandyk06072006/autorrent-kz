@@ -2,12 +2,12 @@ package kz.autorrent.service;
 
 import kz.autorrent.dto.reservation.ReservationRequest;
 import kz.autorrent.dto.reservation.ReservationResponse;
-import kz.autorrent.entity.Car;
+import kz.autorrent.entity.Vehicle;
 import kz.autorrent.entity.Reservation;
 import kz.autorrent.entity.User;
 import kz.autorrent.entity.enums.*;
 import kz.autorrent.exception.ConflictException;
-import kz.autorrent.repository.CarRepository;
+import kz.autorrent.repository.VehicleRepository;
 import kz.autorrent.repository.ReservationRepository;
 import kz.autorrent.repository.UserRepository;
 import kz.autorrent.service.pricing.PricingStrategyResolver;
@@ -34,7 +34,7 @@ class BookingFacadeTest {
     @Mock
     private UserRepository userRepository;
     @Mock
-    private CarRepository carRepository;
+    private VehicleRepository vehicleRepository;
     @Mock
     private ReservationRepository reservationRepository;
     @Mock
@@ -46,7 +46,7 @@ class BookingFacadeTest {
     private BookingFacade bookingFacade;
 
     private User user;
-    private Car car;
+    private Vehicle vehicle;
     private LocalDate start;
     private LocalDate end;
     private ReservationRequest request;
@@ -61,19 +61,20 @@ class BookingFacadeTest {
                 .role(Role.USER)
                 .build();
 
-        car = Car.builder()
+        vehicle = Vehicle.builder()
                 .id(1L)
                 .brand("Toyota")
                 .model("Camry")
                 .year(2023)
                 .licensePlate("123ABC01")
-                .category(CarCategory.COMFORT)
+                .category(VehicleCategory.COMFORT)
+                .type(VehicleType.PASSENGER)
                 .transmission(Transmission.AUTOMATIC)
                 .fuelType(FuelType.PETROL)
                 .seats(5)
                 .pricePerDay(new BigDecimal("20000.00"))
                 .city("Almaty")
-                .status(CarStatus.ACTIVE)
+                .status(VehicleStatus.ACTIVE)
                 .build();
 
         start = LocalDate.now().plusDays(2);
@@ -82,10 +83,10 @@ class BookingFacadeTest {
     }
 
     @Test
-    void booksCarAndCalculatesTotalPrice() {
+    void booksVehicleAndCalculatesTotalPrice() {
         Reservation reservation = Reservation.builder()
                 .user(user)
-                .car(car)
+                .vehicle(vehicle)
                 .startDate(start)
                 .endDate(end)
                 .daysCount(4)
@@ -95,11 +96,11 @@ class BookingFacadeTest {
                 .build();
 
         when(userRepository.findByEmailIgnoreCase("user@test.kz")).thenReturn(Optional.of(user));
-        when(carRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(car));
+        when(vehicleRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(vehicle));
         when(reservationRepository.countOverlapping(eq(1L), eq(start), eq(end), anyCollection()))
                 .thenReturn(0L);
         when(pricingStrategyResolver.resolve(4)).thenReturn(new StandardPricingStrategy());
-        when(reservationFactory.create(eq(user), eq(car), eq(start), eq(end), any()))
+        when(reservationFactory.create(eq(user), eq(vehicle), eq(start), eq(end), any()))
                 .thenReturn(reservation);
         when(reservationRepository.save(any(Reservation.class))).thenAnswer(invocation -> {
             Reservation saved = invocation.getArgument(0);
@@ -118,7 +119,7 @@ class BookingFacadeTest {
     @Test
     void rejectsOverlappingReservation() {
         when(userRepository.findByEmailIgnoreCase("user@test.kz")).thenReturn(Optional.of(user));
-        when(carRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(car));
+        when(vehicleRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(vehicle));
         when(reservationRepository.countOverlapping(eq(1L), eq(start), eq(end), anyCollection()))
                 .thenReturn(1L);
 
@@ -128,10 +129,10 @@ class BookingFacadeTest {
     }
 
     @Test
-    void rejectsCarUnderMaintenance() {
-        car.setStatus(CarStatus.MAINTENANCE);
+    void rejectsVehicleUnderMaintenance() {
+        vehicle.setStatus(VehicleStatus.MAINTENANCE);
         when(userRepository.findByEmailIgnoreCase("user@test.kz")).thenReturn(Optional.of(user));
-        when(carRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(car));
+        when(vehicleRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(vehicle));
 
         assertThatThrownBy(() -> bookingFacade.bookCar("user@test.kz", request))
                 .isInstanceOf(ConflictException.class)

@@ -17,22 +17,22 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     Optional<Review> findByReservationId(Long reservationId);
 
-    @EntityGraph(attributePaths = {"reservation", "reservation.car", "reservation.user"})
-    @Query("select r from Review r where r.reservation.car.id = :carId and r.status = :status")
-    Page<Review> findByCarIdAndStatusWithDetails(@Param("carId") Long carId,
-                                                 @Param("status") ReviewStatus status,
-                                                 Pageable pageable);
+    @EntityGraph(attributePaths = {"reservation", "reservation.vehicle", "reservation.user"})
+    @Query("select r from Review r where r.reservation.vehicle.id = :vehicleId and r.status = :status")
+    Page<Review> findByVehicleIdAndStatusWithDetails(@Param("vehicleId") Long vehicleId,
+                                                     @Param("status") ReviewStatus status,
+                                                     Pageable pageable);
 
-    @EntityGraph(attributePaths = {"reservation", "reservation.car", "reservation.user"})
+    @EntityGraph(attributePaths = {"reservation", "reservation.vehicle", "reservation.user"})
     @Query("select r from Review r")
     Page<Review> findAllWithDetails(Pageable pageable);
 
-    @EntityGraph(attributePaths = {"reservation", "reservation.car", "reservation.user"})
+    @EntityGraph(attributePaths = {"reservation", "reservation.vehicle", "reservation.user"})
     @Query("select r from Review r where r.id = :id")
     Optional<Review> findWithDetailsById(@Param("id") Long id);
 
-    @Query("select avg(r.rating) from Review r where r.reservation.car.id = :carId and r.status = :status")
-    Double averageRating(@Param("carId") Long carId, @Param("status") ReviewStatus status);
+    @Query("select avg(r.rating) from Review r where r.reservation.vehicle.id = :vehicleId and r.status = :status")
+    Double averageRating(@Param("vehicleId") Long vehicleId, @Param("status") ReviewStatus status);
 
-    long countByReservationCarIdAndStatus(Long carId, ReviewStatus status);
+    long countByReservationVehicleIdAndStatus(Long vehicleId, ReviewStatus status);
 }

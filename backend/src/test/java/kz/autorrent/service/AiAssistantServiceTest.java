@@ -1,13 +1,14 @@
 package kz.autorrent.service;
 
 import kz.autorrent.dto.ai.AiChatResponse;
-import kz.autorrent.entity.Car;
-import kz.autorrent.entity.enums.CarCategory;
-import kz.autorrent.entity.enums.CarStatus;
+import kz.autorrent.entity.Vehicle;
+import kz.autorrent.entity.enums.VehicleCategory;
+import kz.autorrent.entity.enums.VehicleStatus;
+import kz.autorrent.entity.enums.VehicleType;
 import kz.autorrent.entity.enums.ReviewStatus;
 import kz.autorrent.entity.enums.Transmission;
 import kz.autorrent.entity.enums.FuelType;
-import kz.autorrent.repository.CarRepository;
+import kz.autorrent.repository.VehicleRepository;
 import kz.autorrent.repository.ReviewRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,7 +32,7 @@ import static org.mockito.Mockito.when;
 class AiAssistantServiceTest {
 
     @Mock
-    private CarRepository carRepository;
+    private VehicleRepository vehicleRepository;
 
     @Mock
     private ReviewRepository reviewRepository;
@@ -41,34 +41,35 @@ class AiAssistantServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new AiAssistantService(carRepository, reviewRepository);
+        service = new AiAssistantService(vehicleRepository, reviewRepository);
     }
 
-    private Car car(Long id, String brand, String model, String city, CarCategory category) {
-        return Car.builder()
+    private Vehicle vehicle(Long id, String brand, String model, String city, VehicleCategory category) {
+        return Vehicle.builder()
                 .id(id)
                 .brand(brand)
                 .model(model)
                 .year(2024)
                 .licensePlate("A" + id + "BC02")
                 .category(category)
+                .type(category.group())
                 .transmission(Transmission.AUTOMATIC)
                 .fuelType(FuelType.PETROL)
                 .seats(5)
                 .pricePerDay(new BigDecimal("25000"))
                 .city(city)
-                .status(CarStatus.ACTIVE)
+                .status(VehicleStatus.ACTIVE)
                 .build();
     }
 
     @Test
     void findsCarsByBudgetAndCity() {
-        Page<Car> page = new PageImpl<>(List.of(
-                car(1L, "Toyota", "Camry", "Almaty", CarCategory.COMFORT)));
-        when(carRepository.search(eq(CarStatus.ACTIVE), isNull(), eq("Almaty"),
-                eq(CarCategory.COMFORT), any(), any(Pageable.class))).thenReturn(page);
+        Page<Vehicle> page = new PageImpl<>(List.of(
+                vehicle(1L, "Toyota", "Camry", "Almaty", VehicleCategory.COMFORT)));
+        when(vehicleRepository.search(eq(VehicleStatus.ACTIVE), isNull(), isNull(), eq("Almaty"),
+                eq(VehicleCategory.COMFORT), any(), isNull(), isNull(), any(Pageable.class))).thenReturn(page);
         when(reviewRepository.averageRating(1L, ReviewStatus.VISIBLE)).thenReturn(4.8);
-        when(reviewRepository.countByReservationCarIdAndStatus(1L, ReviewStatus.VISIBLE)).thenReturn(5L);
+        when(reviewRepository.countByReservationVehicleIdAndStatus(1L, ReviewStatus.VISIBLE)).thenReturn(5L);
 
         AiChatResponse response = service.chat("комфорт до 30000 тенге в Алматы");
 
@@ -96,7 +97,8 @@ class AiAssistantServiceTest {
 
     @Test
     void asksForCriteriaWhenNoSearchWordsButGreets() {
-        when(carRepository.search(eq(CarStatus.ACTIVE), isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
+        when(vehicleRepository.search(eq(VehicleStatus.ACTIVE), isNull(), isNull(), isNull(),
+                isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         AiChatResponse response = service.chat("привет");
@@ -106,8 +108,8 @@ class AiAssistantServiceTest {
 
     @Test
     void reportsEmptyResultWithHelpfulHint() {
-        when(carRepository.search(eq(CarStatus.ACTIVE), isNull(), eq("Astana"),
-                eq(CarCategory.SUV), any(), any(Pageable.class)))
+        when(vehicleRepository.search(eq(VehicleStatus.ACTIVE), isNull(), isNull(), eq("Astana"),
+                eq(VehicleCategory.SUV), any(), isNull(), isNull(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         AiChatResponse response = service.chat("внедорожник до 5000 в Астане");

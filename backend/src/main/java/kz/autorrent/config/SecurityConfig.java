@@ -60,7 +60,7 @@ public class SecurityConfig {
                         // Static SPA resources (built by Vite into src/main/resources/static)
                         .requestMatchers(HttpMethod.GET,
                                 "/", "/index.html", "/assets/**", "/favicon.ico", "/favicon.svg").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/cars/**", "/api/v1/reviews/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/cars/**", "/api/v1/vehicles/**", "/api/v1/reviews/**").permitAll()
                         // SPA pages (react-router) and their static assets
                         .requestMatchers(HttpMethod.GET,
                                 "/", "/index.html", "/assets/**", "/favicon.ico", "/favicon.svg",

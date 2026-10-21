@@ -1,10 +1,10 @@
 package kz.autorrent.mapper;
 
-import kz.autorrent.dto.car.CarResponse;
+import kz.autorrent.dto.vehicle.VehicleResponse;
 import kz.autorrent.dto.reservation.ReservationResponse;
 import kz.autorrent.dto.review.ReviewResponse;
 import kz.autorrent.dto.user.UserResponse;
-import kz.autorrent.entity.Car;
+import kz.autorrent.entity.Vehicle;
 import kz.autorrent.entity.Reservation;
 import kz.autorrent.entity.Review;
 import kz.autorrent.entity.User;
@@ -25,26 +25,32 @@ public final class DtoMapper {
         );
     }
 
-    public static CarResponse toCarResponse(Car car) {
-        return toCarResponse(car, null, null);
+    public static VehicleResponse toVehicleResponse(Vehicle vehicle) {
+        return toVehicleResponse(vehicle, null, null);
     }
 
-    public static CarResponse toCarResponse(Car car, Double averageRating, Long reviewCount) {
-        return new CarResponse(
-                car.getId(),
-                car.getBrand(),
-                car.getModel(),
-                car.getYear(),
-                car.getLicensePlate(),
-                car.getCategory().name(),
-                car.getTransmission().name(),
-                car.getFuelType().name(),
-                car.getSeats(),
-                car.getPricePerDay(),
-                car.getCity(),
-                car.getStatus().name(),
-                car.getDescription(),
-                car.getImageUrl(),
+    public static VehicleResponse toVehicleResponse(Vehicle vehicle, Double averageRating, Long reviewCount) {
+        return new VehicleResponse(
+                vehicle.getId(),
+                vehicle.getBrand(),
+                vehicle.getModel(),
+                vehicle.getYear(),
+                vehicle.getLicensePlate(),
+                vehicle.getType() == null ? null : vehicle.getType().name(),
+                vehicle.getCategory().name(),
+                vehicle.getTransmission().name(),
+                vehicle.getFuelType().name(),
+                vehicle.getSeats(),
+                vehicle.getCapacity(),
+                vehicle.getRequiredLicense() == null ? null : vehicle.getRequiredLicense().name(),
+                vehicle.getWithOperator(),
+                vehicle.getOperatorPricePerDay(),
+                vehicle.getPricePerHour(),
+                vehicle.getPricePerDay(),
+                vehicle.getCity(),
+                vehicle.getStatus().name(),
+                vehicle.getDescription(),
+                vehicle.getImageUrl(),
                 averageRating,
                 reviewCount
         );
@@ -55,11 +61,11 @@ public final class DtoMapper {
                 reservation.getId(),
                 reservation.getUser().getId(),
                 reservation.getUser().getEmail(),
-                reservation.getCar().getId(),
-                reservation.getCar().getBrand(),
-                reservation.getCar().getModel(),
-                reservation.getCar().getLicensePlate(),
-                reservation.getCar().getCity(),
+                reservation.getVehicle().getId(),
+                reservation.getVehicle().getBrand(),
+                reservation.getVehicle().getModel(),
+                reservation.getVehicle().getLicensePlate(),
+                reservation.getVehicle().getCity(),
                 reservation.getStartDate(),
                 reservation.getEndDate(),
                 reservation.getDaysCount(),
@@ -74,13 +80,13 @@ public final class DtoMapper {
     public static ReviewResponse toReviewResponse(Review review) {
         Reservation reservation = review.getReservation();
         User user = reservation.getUser();
-        Car car = reservation.getCar();
+        Vehicle vehicle = reservation.getVehicle();
         return new ReviewResponse(
                 review.getId(),
                 reservation.getId(),
-                car.getId(),
-                car.getBrand(),
-                car.getModel(),
+                vehicle.getId(),
+                vehicle.getBrand(),
+                vehicle.getModel(),
                 user.getId(),
                 user.getFirstName(),
                 user.getLastName(),
