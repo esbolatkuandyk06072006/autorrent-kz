@@ -126,3 +126,16 @@ export const previewPrice = (pricePerDay, start, end) => {
   const discounted = days >= 7
   return { days, total: discounted ? Math.round(base * 0.9) : base, discounted }
 }
+
+// --- Фотографии техники ---
+// images — массив путей (/images/vehicles/{id}/N.jpg); imageUrl — главное фото
+// (дублирует images[0] для обратной совместимости). Возвращаем чистый список.
+
+export const carImages = (car) => {
+  if (!car) return []
+  const list = Array.isArray(car.images) ? car.images.filter(Boolean) : []
+  if (list.length > 0) return list
+  return car.imageUrl ? [car.imageUrl] : []
+}
+
+export const mainImage = (car) => carImages(car)[0] || null

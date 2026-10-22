@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { NavLink, Route, Routes } from 'react-router-dom'
-import { apiGet, apiPost, apiPut, apiPatch, apiDelete } from '../../api.js'
+import { apiGet, apiPost, apiPut, apiPatch, apiDelete, apiUpload } from '../../api.js'
 import { Alert, EmptyState, Modal, Pagination, Spinner, StatusBadge } from '../../components/ui.jsx'
 import {
   CAR_STATUS_LABELS,
@@ -36,7 +36,8 @@ const EMPTY_CAR = {
   pricePerDay: 20000,
   city: 'Almaty',
   description: '',
-  imageUrl: ''
+  imageUrl: '',
+  images: []
 }
 
 export default function AdminPanel() {
@@ -70,6 +71,7 @@ function AdminCars() {
   const [editing, setEditing] = useState(null) // null | car object for edit | 'new'
   const [form, setForm] = useState(EMPTY_CAR)
   const [busy, setBusy] = useState(false)
+  const [pendingFiles, setPendingFiles] = useState([]) // выбранные, ещё не загруженные фото
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -91,6 +93,7 @@ function AdminCars() {
     setForm(EMPTY_CAR)
     setEditing('new')
     setMessage(null)
+    setPendingFiles([])
   }
 
   const openEdit = (car) => {
@@ -100,16 +103,19 @@ function AdminCars() {
       capacity: car.capacity ?? '',
       operatorPricePerDay: car.operatorPricePerDay ?? '',
       pricePerHour: car.pricePerHour ?? '',
-      withOperator: !!car.withOperator
+      withOperator: !!car.withOperator,
+      images: Array.isArray(car.images) ? car.images : car.imageUrl ? [car.imageUrl] : []
     })
     setEditing(car)
     setMessage(null)
+    setPendingFiles([])
   }
 
   const save = async (e) => {
     e.preventDefault()
     setBusy(true)
     setMessage(null)
+    const images = Array.isArray(form.images) ? form.images.filter(Boolean) : []
     const payload = {
       ...form,
       year: Number(form.year),
@@ -118,16 +124,32 @@ function AdminCars() {
       capacity: form.capacity === '' ? null : Number(form.capacity),
       operatorPricePerDay: form.operatorPricePerDay === '' ? null : Number(form.operatorPricePerDay),
       pricePerHour: form.pricePerHour === '' ? null : Number(form.pricePerHour),
-      withOperator: !!form.withOperator
+      withOperator: !!form.withOperator,
+      images,
+      imageUrl: images[0] || null
     }
     try {
+      let savedId = editing !== 'new' ? editing.id : null
+
       if (editing === 'new') {
-        await apiPost('/api/v1/vehicles', payload)
+        const created = await apiPost('/api/v1/vehicles', payload)
+        savedId = created?.id ?? null
         setMessage({ kind: 'success', text: 'Техника добавлена.' })
       } else {
         await apiPut(`/api/v1/vehicles/${editing.id}`, payload)
         setMessage({ kind: 'success', text: 'Техника обновлена.' })
       }
+
+      // Загрузка выбранных файлов: у новой техники — после создания (нужен id).
+      if (savedId && pendingFiles.length > 0) {
+        await apiUpload(`/api/v1/vehicles/${savedId}/images`, pendingFiles)
+        setMessage({
+          kind: 'success',
+          text: `Фото загружено: ${pendingFiles.length}. Не забудьте сохранить, если добавляли ссылки вручную.`
+        })
+      }
+
+      setPendingFiles([])
       setEditing(null)
       load()
     } catch (err) {
@@ -394,10 +416,84 @@ function AdminCars() {
               Описание
               <textarea rows={3} maxLength={2000} value={form.description || ''} onChange={update('description')} />
             </label>
-            <label>
-              Ссылка на фото
-              <input maxLength={500} value={form.imageUrl || ''} onChange={update('imageUrl')} placeholder="https://..." />
-            </label>
+
+            {/* Фотографии: загрузка нескольких файлов + список ссылок с удалением. */}
+            <div className="photos-field">
+              <span className="photos-label">Фотографии</span>
+
+              <div className="photos-list">
+                {(form.images || []).length === 0 && pendingFiles.length === 0 && (
+                  <span className="muted">Фото пока нет — добавьте файлы или ссылку ниже.</span>
+                )}
+                {(form.images || []).map((img, i) => (
+                  <div key={img} className="photo-item">
+                    <img src={img} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.opacity = 0.25 }} />
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      title="Убрать фото"
+                      onClick={() =>
+                        setForm((f) => ({ ...f, images: f.images.filter((_, idx) => idx !== i) }))
+                      }
+                    >
+                      ✕
+                    </button>
+                    {i === 0 && pendingFiles.length === 0 && <span className="photo-main-tag">главное</span>}
+                  </div>
+                ))}
+                {/* Превью ещё не загруженных файлов: попадут в галерею после «Сохранить». */}
+                {pendingFiles.map((f, i) => (
+                  <div key={`${f.name}-${i}`} className="photo-item photo-item-new">
+                    <img src={URL.createObjectURL(f)} alt="" loading="lazy" />
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      title="Убрать файл"
+                      onClick={() => setPendingFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                    >
+                      ✕
+                    </button>
+                    <span className="photo-new-tag">новое</span>
+                  </div>
+                ))}
+              </div>
+
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => {
+                  const chosen = Array.from(e.target.files || [])
+                  if (chosen.length === 0) return
+                  setPendingFiles((prev) => [...prev, ...chosen])
+                  e.target.value = ''
+                }}
+              />
+              <small className="muted">
+                Можно выбрать несколько фото разом. Файлы сохранятся при нажатии «Сохранить» (до 10 МБ, jpg/png/webp/gif).
+              </small>
+
+              <div className="photo-url-row">
+                <input
+                  maxLength={500}
+                  placeholder="Или вставьте ссылку и нажмите Enter: /images/vehicles/1/1.jpg"
+                  onKeyDown={(e) => {
+                    if (e.key !== 'Enter') return
+                    e.preventDefault()
+                    const value = form.imageUrl?.trim()
+                    if (!value) return
+                    setForm((f) => ({
+                      ...f,
+                      images: [...(f.images || []), value],
+                      imageUrl: ''
+                    }))
+                  }}
+                  value={form.imageUrl || ''}
+                  onChange={update('imageUrl')}
+                />
+              </div>
+            </div>
+
             <div className="modal-actions">
               <button type="button" className="btn btn-ghost" onClick={() => setEditing(null)}>
                 Отмена

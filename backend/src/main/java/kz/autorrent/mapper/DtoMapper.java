@@ -9,6 +9,8 @@ import kz.autorrent.entity.Reservation;
 import kz.autorrent.entity.Review;
 import kz.autorrent.entity.User;
 
+import java.util.List;
+
 public final class DtoMapper {
 
     private DtoMapper() {
@@ -51,6 +53,7 @@ public final class DtoMapper {
                 vehicle.getStatus().name(),
                 vehicle.getDescription(),
                 vehicle.getImageUrl(),
+                vehicle.getImages() == null ? null : List.copyOf(vehicle.getImages()),
                 averageRating,
                 reviewCount
         );

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { apiGet, apiPost, apiPut, apiDelete } from '../api.js'
 import { useAuth } from '../AuthContext.jsx'
-import CarArt from '../components/CarArt.jsx'
+import CarImage from '../components/CarImage.jsx'
 import { Alert, Spinner, StatusBadge } from '../components/ui.jsx'
 import {
   CAR_STATUS_LABELS,
@@ -13,6 +13,7 @@ import {
   TRANSMISSION_LABELS,
   VEHICLE_TYPE_LABELS,
   addDays,
+  carImages,
   dateLabel,
   money,
   previewPrice,
@@ -28,6 +29,7 @@ export default function CarDetail() {
   const [reviews, setReviews] = useState([])
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [activePhoto, setActivePhoto] = useState(0)
 
   const [booking, setBooking] = useState({ startDate: addDays(today(), 1), endDate: addDays(today(), 4) })
   const [bookingBusy, setBookingBusy] = useState(false)
@@ -58,6 +60,11 @@ export default function CarDetail() {
   useEffect(() => {
     load()
   }, [load])
+
+  // При загрузке другой машины возвращаемся к первому фото.
+  useEffect(() => {
+    setActivePhoto(0)
+  }, [id])
 
   const preview = previewPrice(car?.pricePerDay, booking.startDate, booking.endDate)
 
@@ -143,7 +150,7 @@ export default function CarDetail() {
     <div className="container section">
       <div className="detail-grid">
         <div className="card detail-main">
-          <CarArt car={car} big />
+          <PhotoGallery car={car} active={activePhoto} onChange={setActivePhoto} />
           <h1 className="detail-title">
             {car.brand} {car.model} <span className="muted">{car.year}</span>
           </h1>
@@ -337,5 +344,76 @@ export default function CarDetail() {
         )}
       </section>
     </div>
+  )
+}
+
+/**
+ * Галерея фотографий техники: большое фото + миниатюры.
+ * Нет фото или файл не загрузился — вместо битой картинки CarImage
+ * рисует аккуратную заглушку с силуэтом и иконкой категории.
+ */
+function PhotoGallery({ car, active, onChange }) {
+  const images = carImages(car)
+  const index = Math.min(active, Math.max(images.length - 1, 0))
+
+  if (images.length === 0) {
+    return (
+      <div className="gallery">
+        <div className="gallery-main">
+          <CarImage car={car} big eager />
+        </div>
+      </div>
+    )
+  }
+
+  if (images.length === 1) {
+    return (
+      <div className="gallery">
+        <div className="gallery-main">
+          <CarImage car={{ ...car, images }} big eager />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="gallery">
+      <div className="gallery-main">
+        {/* Ключ по src: при смене фото браузер заново обрабатывает onError. */}
+        <CarImage key={images[index]} car={{ ...car, images: [images[index]] }} big eager />
+        <span className="gallery-counter">
+          {index + 1} / {images.length}
+        </span>
+      </div>
+      <div className="gallery-thumbs">
+        {images.map((img, i) => (
+          <GalleryThumb
+            key={img}
+            src={img}
+            active={i === index}
+            onSelect={() => onChange(i)}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/** Миниатюра: при битой ссылке вместо сломанной картинки — иконка категории. */
+function GalleryThumb({ src, active, onSelect }) {
+  const [broken, setBroken] = useState(false)
+  return (
+    <button
+      type="button"
+      className={`gallery-thumb ${active ? 'gallery-thumb-active' : ''}`}
+      onClick={onSelect}
+      aria-label="Фото"
+    >
+      {broken ? (
+        <span className="gallery-thumb-fallback">🖼</span>
+      ) : (
+        <img src={src} alt="" loading="lazy" decoding="async" onError={() => setBroken(true)} />
+      )}
+    </button>
   )
 }

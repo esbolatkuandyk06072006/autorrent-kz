@@ -23,11 +23,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
 public class VehicleService {
+
+    /** Максимум фотографий в галерее одной единицы техники. */
+    private static final int MAX_IMAGES = 12;
 
     private final VehicleRepository vehicleRepository;
     private final ReservationRepository reservationRepository;
@@ -106,8 +111,12 @@ public class VehicleService {
                 .city(request.city().trim())
                 .status(VehicleStatus.ACTIVE)
                 .description(request.description())
-                .imageUrl(request.imageUrl())
                 .build();
+
+        List<String> images = normalizeImages(request);
+        vehicle.setImages(images);
+        // imageUrl дублирует главное фото (images[0]) для обратной совместимости.
+        vehicle.setImageUrl(images.isEmpty() ? null : images.get(0));
 
         return DtoMapper.toVehicleResponse(vehicleRepository.save(vehicle));
     }
@@ -137,7 +146,10 @@ public class VehicleService {
         vehicle.setPricePerDay(request.pricePerDay());
         vehicle.setCity(request.city().trim());
         vehicle.setDescription(request.description());
-        vehicle.setImageUrl(request.imageUrl());
+
+        List<String> images = normalizeImages(request);
+        vehicle.setImages(images);
+        vehicle.setImageUrl(images.isEmpty() ? null : images.get(0));
 
         return DtoMapper.toVehicleResponse(vehicleRepository.save(vehicle));
     }
@@ -198,5 +210,33 @@ public class VehicleService {
 
     private String normalizePlate(String plate) {
         return plate.trim().toUpperCase(Locale.ROOT);
+    }
+
+    /**
+     * Собирает чистый список фото: из images запроса, а если его нет — из imageUrl.
+     * Убирает пустые/дубликаты и обрезает до MAX_IMAGES. images[0] — главное фото.
+     */
+    private List<String> normalizeImages(VehicleRequest request) {
+        List<String> source = request.images() != null && !request.images().isEmpty()
+                ? request.images()
+                : (request.imageUrl() == null || request.imageUrl().isBlank()
+                        ? List.of()
+                        : List.of(request.imageUrl()));
+
+        List<String> result = new ArrayList<>();
+        for (String raw : source) {
+            if (raw == null) {
+                continue;
+            }
+            String path = raw.trim();
+            if (path.isEmpty() || result.contains(path)) {
+                continue;
+            }
+            result.add(path);
+            if (result.size() >= MAX_IMAGES) {
+                break;
+            }
+        }
+        return result;
     }
 }

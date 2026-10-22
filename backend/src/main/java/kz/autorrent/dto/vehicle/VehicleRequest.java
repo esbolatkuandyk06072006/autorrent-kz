@@ -8,6 +8,7 @@ import kz.autorrent.entity.enums.FuelType;
 import kz.autorrent.entity.enums.Transmission;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * Запрос на создание/обновление единицы техники.
@@ -15,6 +16,10 @@ import java.math.BigDecimal;
  * type, requiredLicense, seats опциональны: если не переданы — сервис выведет
  * их из категории (легковая → тип PASSENGER, права B, 5 мест и т.д.).
  * Это сохраняет совместимость со старыми запросами вида «{category: COMFORT}».
+ *
+ * images — галерея фотографий (пути /images/vehicles/{id}/N.jpg); первая — главное фото.
+ * imageUrl сохранён для обратной совместимости: если images пуст, но imageUrl задан,
+ * сервис превратит его в images[0].
  */
 public record VehicleRequest(
         @NotBlank @Size(max = 50) String brand,
@@ -34,6 +39,7 @@ public record VehicleRequest(
         @NotNull @DecimalMin(value = "0.01") @Digits(integer = 8, fraction = 2) BigDecimal pricePerDay,
         @NotBlank @Size(max = 50) String city,
         @Size(max = 2000) String description,
-        @Size(max = 500) String imageUrl
+        @Size(max = 500) String imageUrl,
+        @Size(max = 12) List<@Size(max = 500) String> images
 ) {
 }

@@ -13,6 +13,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Единица техники в каталоге (легковая машина, грузовик или спецтехника).
@@ -106,6 +108,18 @@ public class Vehicle {
 
     @Column(name = "image_url", length = 500)
     private String imageUrl;
+
+    /**
+     * Галерея фотографий (пути вида /images/vehicles/{id}/1.jpg).
+     * Порядок важен: images[0] — главное фото карточки.
+     * imageUrl сохранён для обратной совместимости и дублирует images[0].
+     */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "vehicle_images", joinColumns = @JoinColumn(name = "vehicle_id"))
+    @Column(name = "image_path", length = 500)
+    @OrderColumn(name = "position")
+    @Builder.Default
+    private List<String> images = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

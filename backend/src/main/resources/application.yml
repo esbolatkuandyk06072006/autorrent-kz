@@ -28,6 +28,11 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 60MB
+
   data:
     web:
       pageable:
@@ -43,6 +48,8 @@ app:
     expiration-seconds: ${JWT_EXPIRATION_SECONDS:86400}
   seed:
     enabled: ${APP_SEED_ENABLED:true}
+  upload:
+    dir: ${APP_UPLOAD_DIR:uploads}
 
 springdoc:
   swagger-ui:

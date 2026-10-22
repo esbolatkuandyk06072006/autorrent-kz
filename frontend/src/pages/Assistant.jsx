@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, apiGet } from '../api.js'
-import CarArt from '../components/CarArt.jsx'
+import CarImage from '../components/CarImage.jsx'
 import { money } from '../utils.js'
 
 // Initial greeting. NOTE: the key must be `text` (not `reply`) because the
@@ -137,7 +137,7 @@ function UserMessage({ text }) {
 function CarMini({ car }) {
   return (
     <Link to={`/cars/${car.id}`} className="chat-car">
-      <CarArt car={car} />
+      <CarImage car={car} />
       <div className="chat-car-body">
         <b>
           {car.brand} {car.model}

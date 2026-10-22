@@ -69,6 +69,21 @@ public class DataInitializer implements CommandLineRunner {
 
         List<Vehicle> vehicles = vehicleRepository.saveAll(seedVehicles());
 
+        // Фотографии: путь /images/vehicles/{id}/N.jpg (файлы кладутся в frontend/public).
+        // images[0] продублирован в imageUrl. Если файла нет — фронт покажет заглушку.
+        for (Vehicle v : vehicles) {
+            List<String> photos = new ArrayList<>();
+            photos.add("/images/vehicles/" + v.getId() + "/1.jpg");
+            if ("Camry".equals(v.getModel()) || "Tucson".equals(v.getModel())) {
+                // У демо-машин — по 3 фото, чтобы показать галерею.
+                photos.add("/images/vehicles/" + v.getId() + "/2.jpg");
+                photos.add("/images/vehicles/" + v.getId() + "/3.jpg");
+            }
+            v.setImages(photos);
+            v.setImageUrl(photos.get(0));
+        }
+        vehicleRepository.saveAll(vehicles);
+
         // Demo reservation on the first vehicle (Camry) with a review, and a
         // confirmed future reservation on the second (Tucson) — kept identical
         // to the previous seed so existing demos/tests still behave the same.

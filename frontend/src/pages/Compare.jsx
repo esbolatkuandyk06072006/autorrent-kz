@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiGet } from '../api.js'
-import CarArt from '../components/CarArt.jsx'
+import CarImage from '../components/CarImage.jsx'
 import { EmptyState, Spinner } from '../components/ui.jsx'
 import { useLibrary } from '../LibraryContext.jsx'
 import {
@@ -98,7 +98,7 @@ export default function Compare() {
                 {cars.map((car) => (
                   <th key={car.id}>
                     <div className="compare-car">
-                      <CarArt car={car} />
+                      <CarImage car={car} />
                       <b>
                         {car.brand} {car.model}
                       </b>

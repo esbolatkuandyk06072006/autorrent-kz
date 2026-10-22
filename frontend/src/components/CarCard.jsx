@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import CarArt from './CarArt.jsx'
+import CarImage from './CarImage.jsx'
 import { CATEGORY_LABELS, LICENSE_LABELS, VEHICLE_TYPE_LABELS, money } from '../utils.js'
 import { useLibrary } from '../LibraryContext.jsx'
 
@@ -13,7 +13,7 @@ export default function CarCard({ car, showRemoveFavorite = false, onRemoveFavor
     <article className="car-card">
       <div className="car-card-media">
         <Link to={`/cars/${car.id}`} tabIndex={-1} aria-hidden="true">
-          <CarArt car={car} />
+          <CarImage car={car} />
         </Link>
         <div className="car-card-overlay">
           <button

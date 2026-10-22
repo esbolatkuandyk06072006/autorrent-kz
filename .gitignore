@@ -12,6 +12,10 @@ logs/
 .env
 .attach_pid*
 
+# Runtime photo uploads (served from here, never committed)
+uploads/
+backend/uploads/
+
 # IDE
 .idea/
 *.iml
