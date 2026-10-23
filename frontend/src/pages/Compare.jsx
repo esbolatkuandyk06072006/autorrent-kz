@@ -4,6 +4,7 @@ import { apiGet } from '../api.js'
 import CarImage from '../components/CarImage.jsx'
 import { EmptyState, Spinner } from '../components/ui.jsx'
 import { useLibrary } from '../LibraryContext.jsx'
+import { useTranslation } from '../i18n.jsx'
 import {
   CAR_STATUS_LABELS,
   CATEGORY_LABELS,
@@ -66,6 +67,7 @@ const bestIndex = (row, cars) => {
 
 export default function Compare() {
   const { compare, toggleCompare, clearCompare } = useLibrary()
+  const { t } = useTranslation()
   const [cars, setCars] = useState([])
   const [loading, setLoading] = useState(false)
 
@@ -92,26 +94,26 @@ export default function Compare() {
     <div className="container section">
       <div className="page-head">
         <div>
-          <h1>⇄ Сравнение</h1>
-          <p className="muted">До 3 машин рядом: цены, характеристики и рейтинг — как в автосалоне.</p>
+          <h1>⇄ {t('compare.title')}</h1>
+          <p className="muted">{t('compare.subtitle')}</p>
         </div>
         {cars.length > 0 && (
           <button className="btn btn-ghost" onClick={clearCompare}>
-            Очистить
+            {t('compare.clear')}
           </button>
         )}
       </div>
 
-      {loading && <Spinner label="Загружаем машины…" />}
+      {loading && <Spinner label={t('common.loading')} />}
 
       {!loading && cars.length === 0 && (
         <EmptyState
           icon="⚖️"
-          title="Сравнивать пока нечего"
-          hint="Нажмите ⇄ на карточках в каталоге — выберите до 3 машин."
+          title={t('compare.empty')}
+          hint={t('compare.emptyText')}
           action={
             <Link className="btn btn-primary" to="/">
-              Выбрать машины
+              {t('compare.pick')}
             </Link>
           }
         />
@@ -147,7 +149,7 @@ export default function Compare() {
                     {cars.map((car, i) => (
                       <td key={car.id} className={i === best ? 'compare-best' : ''}>
                         {row.render(car)}
-                        {i === best && <span className="best-mark" title="Лучшее значение"> ★</span>}
+                        {i === best && <span className="best-mark" title={t('compare.best')}> ★</span>}
                       </td>
                     ))}
                   </tr>

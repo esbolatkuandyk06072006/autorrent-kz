@@ -4,9 +4,11 @@ import { apiGet } from '../api.js'
 import CarCard from '../components/CarCard.jsx'
 import { EmptyState, Spinner } from '../components/ui.jsx'
 import { useLibrary } from '../LibraryContext.jsx'
+import { useTranslation } from '../i18n.jsx'
 
 export default function Favorites() {
   const { favorites, toggleFavorite } = useLibrary()
+  const { t } = useTranslation()
   const [cars, setCars] = useState([])
   const [loading, setLoading] = useState(false)
 
@@ -30,19 +32,19 @@ export default function Favorites() {
 
   return (
     <div className="container section">
-      <h1>❤️ Избранное</h1>
+      <h1>❤️ {t('favorites.title')}</h1>
       <p className="muted">Машины, которые вы сохранили. Список хранится в браузере — работает даже без входа.</p>
 
-      {loading && <Spinner label="Загружаем избранное…" />}
+      {loading && <Spinner label={t('common.loading')} />}
 
       {!loading && cars.length === 0 && (
         <EmptyState
           icon="💛"
-          title="Пока пусто"
-          hint="Нажмите ♥ на карточке машины в каталоге — она появится здесь."
+          title={t('favorites.empty')}
+          hint={t('favorites.emptyText')}
           action={
             <Link className="btn btn-primary" to="/">
-              Перейти в каталог
+              {t('notFound.back')}
             </Link>
           }
         />

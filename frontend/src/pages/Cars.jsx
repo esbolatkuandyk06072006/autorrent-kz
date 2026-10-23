@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { apiGet } from '../api.js'
 import CarCard from '../components/CarCard.jsx'
 import { Alert, EmptyState, Pagination, Spinner } from '../components/ui.jsx'
+import { useTranslation } from '../i18n.jsx'
 import {
   CITIES,
   CATEGORY_GROUPS,
@@ -18,6 +19,7 @@ import {
 const isPassenger = (type) => type === 'PASSENGER' || type === ''
 
 export default function Cars() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const initialCategory = searchParams.get('category') || ''
   const initialTag = searchParams.get('tag') || ''
@@ -114,11 +116,8 @@ export default function Cars() {
     <>
       <section className="hero">
         <div className="container">
-          <h1>Аренда техники по Казахстану</h1>
-          <p>
-            Легковые, грузовые и спецтехника. Выберите группу, затем класс — и забронируйте за минуту.
-            Цена считается сразу: скидка 10% с 7 дней и 20% с 30 дней.
-          </p>
+          <h1>{t('home.title')}</h1>
+          <p>{t('home.subtitle')}</p>
         </div>
       </section>
 
@@ -127,6 +126,7 @@ export default function Cars() {
         <div className="collections">
           {COLLECTIONS.map((collection) => {
             const active = filters.tag === collection.tag
+            const label = t(`home.collection${collection.key[0].toUpperCase()}${collection.key.slice(1)}`)
             return (
               <button
                 key={collection.key}
@@ -135,13 +135,13 @@ export default function Cars() {
                 onClick={() => pickTag(collection.tag)}
               >
                 <span className="collection-icon">{collection.icon}</span>
-                {collection.title}
+                {label}
               </button>
             )
           })}
           {filters.tag && (
             <button type="button" className="btn btn-ghost btn-sm" onClick={() => pickTag(filters.tag)}>
-              Показать всё
+              {t('home.reset')}
             </button>
           )}
         </div>
@@ -149,9 +149,9 @@ export default function Cars() {
         <div className="filters card">
           <div className="filters-grid">
             <label>
-              Группа
+              {t('home.group')}
               <select value={filters.type} onChange={update('type')}>
-                <option value="">Все группы</option>
+                <option value="">{t('home.groupAll')}</option>
                 {Object.entries(VEHICLE_TYPE_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
@@ -160,9 +160,9 @@ export default function Cars() {
               </select>
             </label>
             <label>
-              Категория
+              {t('home.category')}
               <select value={filters.category} onChange={update('category')}>
-                <option value="">Любая</option>
+                <option value="">{t('home.categoryAny')}</option>
                 {categoryOptions.map((value) => (
                   <option key={value} value={value}>
                     {CATEGORY_LABELS[value]}
@@ -171,13 +171,13 @@ export default function Cars() {
               </select>
             </label>
             <label>
-              Марка
+              {t('home.brand')}
               <input value={filters.brand} onChange={update('brand')} placeholder="Toyota, Kia, KamAZ…" />
             </label>
             <label>
-              Город
+              {t('home.city')}
               <select value={filters.city} onChange={update('city')}>
-                <option value="">Любой</option>
+                <option value="">{t('home.cityAny')}</option>
                 {CITIES.map((city) => (
                   <option key={city} value={city}>
                     {city}
@@ -186,7 +186,7 @@ export default function Cars() {
               </select>
             </label>
             <label>
-              Цена до, ₸/день
+              {t('home.maxPrice')}
               <input type="number" min="0" value={filters.maxPrice} onChange={update('maxPrice')} placeholder="100000" />
             </label>
 
@@ -216,35 +216,35 @@ export default function Cars() {
             )}
 
             <label>
-              Свободен с
+              {t('home.startDate')}
               <input type="date" value={filters.startDate} onChange={update('startDate')} />
             </label>
             <label>
-              Свободен до
+              {t('home.endDate')}
               <input type="date" value={filters.endDate} onChange={update('endDate')} />
             </label>
           </div>
           <div className="filters-actions">
             <button className="btn btn-ghost btn-sm" onClick={quickDates}>
-              📅 Ближайшие даты
+              📅 {t('home.dates')}
             </button>
             <button className="btn btn-ghost btn-sm" onClick={reset}>
-              Сбросить фильтры
+              {t('home.reset')}
             </button>
           </div>
         </div>
 
         <Alert>{error}</Alert>
-        {loading && <Spinner label="Загружаем технику…" />}
+        {loading && <Spinner label={t('common.loading')} />}
 
         {!loading && data && data.content.length === 0 && (
           <EmptyState
             icon="🚗"
-            title="Ничего не найдено"
-            hint="Попробуйте изменить фильтры или даты."
+            title={t('home.empty')}
+            hint={t('home.emptyText')}
             action={
               <button className="btn btn-primary" onClick={reset}>
-                Сбросить фильтры
+                {t('home.reset')}
               </button>
             }
           />

@@ -2,9 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiGet, apiPatch, apiDownload } from '../api.js'
 import { Alert, EmptyState, Pagination, Spinner, StatusBadge } from '../components/ui.jsx'
+import { useTranslation } from '../i18n.jsx'
 import { RESERVATION_STATUS_LABELS, dateLabel, money } from '../utils.js'
 
 export default function MyReservations() {
+  const { t } = useTranslation()
   const [data, setData] = useState(null)
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -56,21 +58,21 @@ export default function MyReservations() {
 
   return (
     <div className="container section">
-      <h1>Мои брони</h1>
+      <h1>{t('myReservations.title')}</h1>
       <p className="muted">Здесь видны только ваши бронирования.</p>
 
       <Alert kind={message?.kind}>{message?.text}</Alert>
       <Alert>{error}</Alert>
-      {loading && <Spinner label="Загружаем брони…" />}
+      {loading && <Spinner label={t('common.loading')} />}
 
       {!loading && data && data.content.length === 0 && (
         <EmptyState
           icon="🗓"
-          title="Броней пока нет"
-          hint="Выберите автомобиль в каталоге и забронируйте его."
+          title={t('myReservations.empty')}
+          hint={t('myReservations.emptyText')}
           action={
             <Link className="btn btn-primary" to="/">
-              Перейти в каталог
+              {t('notFound.back')}
             </Link>
           }
         />
@@ -118,7 +120,7 @@ export default function MyReservations() {
                   <div className="reservation-actions">
                     {active && (
                       <button className="btn btn-ghost btn-sm" onClick={() => downloadPdf(reservation.id)}>
-                        📄 Скачать PDF
+                        📄 {t('myReservations.pdf')}
                       </button>
                     )}
                     {canCancel && (
@@ -129,7 +131,7 @@ export default function MyReservations() {
                           setCancelReason('')
                         }}
                       >
-                        Отменить бронь
+                        {t('myReservations.cancel')}
                       </button>
                     )}
                   </div>
@@ -145,7 +147,9 @@ export default function MyReservations() {
         <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setCancelTarget(null)}>
           <div className="modal">
             <div className="modal-head">
-              <h3>Отменить бронь #{cancelTarget.id}?</h3>
+              <h3>
+                {t('myReservations.cancel')} #{cancelTarget.id}?
+              </h3>
               <button className="modal-close" onClick={() => setCancelTarget(null)}>
                 ✕
               </button>
@@ -162,10 +166,10 @@ export default function MyReservations() {
               </label>
               <div className="modal-actions">
                 <button className="btn btn-ghost" onClick={() => setCancelTarget(null)}>
-                  Оставить бронь
+                  {t('common.close')}
                 </button>
                 <button className="btn btn-danger" onClick={cancel}>
-                  Отменить
+                  {t('myReservations.cancel')}
                 </button>
               </div>
             </div>

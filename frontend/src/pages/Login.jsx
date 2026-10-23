@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext.jsx'
 import { Alert } from '../components/ui.jsx'
+import { useTranslation } from '../i18n.jsx'
 
 export default function Login() {
   const { login } = useAuth()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const [form, setForm] = useState({ email: '', password: '' })
@@ -28,14 +30,14 @@ export default function Login() {
   return (
     <div className="container section narrow">
       <div className="card auth-card">
-        <h1>Вход в аккаунт</h1>
-        <p className="muted">Введите email и пароль, чтобы бронировать автомобили.</p>
+        <h1>{t('login.title')}</h1>
+        <p className="muted">{t('login.subtitle')}</p>
 
         <Alert>{error}</Alert>
 
         <form onSubmit={submit} className="form">
           <label>
-            Email
+            {t('login.email')}
             <input
               type="email"
               required
@@ -45,7 +47,7 @@ export default function Login() {
             />
           </label>
           <label>
-            Пароль
+            {t('login.password')}
             <input
               type="password"
               required
@@ -55,16 +57,16 @@ export default function Login() {
             />
           </label>
           <button className="btn btn-primary btn-block" disabled={loading}>
-            {loading ? 'Входим…' : 'Войти'}
+            {loading ? '…' : t('login.submit')}
           </button>
         </form>
 
         <div className="auth-hint">
           <p>
-            Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
+            {t('login.noAccount')} <Link to="/register">{t('login.registerLink')}</Link>
           </p>
           <div className="demo-creds">
-            <b>Демо-доступ:</b>
+            <b>{t('login.demo')}</b>
             <code>user@autorrent.kz / User123!</code>
             <code>admin@autorrent.kz / Admin123!</code>
           </div>

@@ -2,6 +2,7 @@ import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import Header from './components/Header.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { useAuth } from './AuthContext.jsx'
+import { useTranslation } from './i18n.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Cars from './pages/Cars.jsx'
@@ -27,14 +28,15 @@ function RequireAuth({ children, adminOnly = false, staffOnly = false }) {
 }
 
 function NotFound() {
+  const { t } = useTranslation()
   return (
     <div className="container section">
       <div className="empty-state">
         <div className="empty-icon">🧭</div>
-        <h3>Страница не найдена</h3>
-        <p>Проверьте адрес или вернитесь к каталогу автомобилей.</p>
+        <h3>{t('notFound.title')}</h3>
+        <p>{t('notFound.text')}</p>
         <Link className="btn btn-primary" to="/">
-          К каталогу
+          {t('notFound.back')}
         </Link>
       </div>
     </div>
@@ -42,6 +44,7 @@ function NotFound() {
 }
 
 export default function App() {
+  const { t } = useTranslation()
   return (
     <div className="app">
       <Header />
@@ -94,9 +97,9 @@ export default function App() {
       </main>
       <footer className="footer">
         <div className="container footer-inner">
-          <span>© 2026 AutoRent KZ · учебный проект</span>
+          <span>© 2026 AutoRent KZ · {t('footer.project')}</span>
           <span>
-            API-документация: <a href="/swagger-ui.html">Swagger UI</a>
+            {t('footer.apiDocs')}: <a href="/swagger-ui.html">Swagger UI</a>
           </span>
         </div>
       </footer>

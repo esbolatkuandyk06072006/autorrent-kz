@@ -1,12 +1,14 @@
 :root {
   --bg: #f4f6fb;
   --surface: #ffffff;
+  --surface-2: #eef2f9;
   --border: #e3e8f2;
   --text: #101a2e;
   --muted: #64748b;
   --primary: #1d4ed8;
   --primary-dark: #1e40af;
   --primary-soft: #eef2ff;
+  --primary-text: #ffffff;
   --danger: #dc2626;
   --danger-soft: #fee2e2;
   --success: #16a34a;
@@ -14,8 +16,32 @@
   --warning: #d97706;
   --warning-soft: #fef3c7;
   --header-bg: #0b1220;
-  --radius: 14px;
+  --header-text: #e6edf7;
   --shadow: 0 4px 18px rgba(15, 23, 42, 0.07);
+  --radius: 14px;
+}
+
+/* Тёмная тема: только переопределение переменных, разметка не меняется. */
+[data-theme='dark'] {
+  --bg: #0d1424;
+  --surface: #141d31;
+  --surface-2: #1b2740;
+  --border: #263250;
+  --text: #e8eefb;
+  --muted: #94a3b8;
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --primary-soft: #1c2a4a;
+  --primary-text: #ffffff;
+  --danger: #f87171;
+  --danger-soft: #3b1d1d;
+  --success: #4ade80;
+  --success-soft: #14301f;
+  --warning: #fbbf24;
+  --warning-soft: #3a2d10;
+  --header-bg: #0a0f1c;
+  --header-text: #e6edf7;
+  --shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -206,6 +232,51 @@ a {
   font-size: 0.92rem;
 }
 
+/* ---------- Переключатели темы и языка в шапке ---------- */
+
+.header-toggles {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-toggle {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  border-radius: 10px;
+  padding: 4px 8px;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.icon-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.lang-toggle {
+  display: inline-flex;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.lang-btn {
+  border: 0;
+  background: transparent;
+  color: #cbd5e1;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lang-btn-on {
+  background: var(--primary);
+  color: #fff;
+}
+
 /* ---------- Buttons ---------- */
 
 .btn {
@@ -244,7 +315,7 @@ a {
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: #fecaca;
+  background: color-mix(in srgb, var(--danger) 25%, transparent);
 }
 
 .btn-ghost {
@@ -296,7 +367,7 @@ a {
 }
 
 .demo-creds code {
-  background: #fff;
+  background: var(--surface);
   padding: 3px 8px;
   border-radius: 6px;
   border: 1px solid var(--border);
@@ -365,7 +436,7 @@ a {
   border-radius: 10px;
   font-size: 0.95rem;
   font-family: inherit;
-  background: #fff;
+  background: var(--surface);
   font-weight: 400;
 }
 
@@ -427,7 +498,7 @@ a {
   line-height: 0;
   /* Единые пропорции карточек 16:9 — фото и заглушка одинаковой высоты. */
   aspect-ratio: 16 / 9;
-  background: #e2e8f0;
+  background: var(--surface-2);
   overflow: hidden;
 }
 
@@ -480,12 +551,12 @@ a {
 }
 
 .icon-btn-on {
-  background: #fee2e2;
-  color: #ef4444;
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 .icon-btn-on:not(:first-child) {
-  background: #dbeafe;
+  background: var(--primary-soft);
   color: #1d4ed8;
   font-weight: 700;
 }
@@ -507,7 +578,7 @@ a {
   width: 100%;
   height: 150px;
   display: block;
-  background: #e2e8f0;
+  background: var(--surface-2);
 }
 
 .car-art-lg {
@@ -522,7 +593,7 @@ a {
   object-fit: cover;
   object-position: center;
   display: block;
-  background: #e2e8f0;
+  background: var(--surface-2);
   line-height: 0;
 }
 
@@ -644,7 +715,7 @@ a {
   aspect-ratio: 16 / 9;
   overflow: hidden;
   border-radius: 12px;
-  background: #e2e8f0;
+  background: var(--surface-2);
 }
 
 .gallery-main .car-image,
@@ -687,7 +758,7 @@ a {
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
-  background: #e2e8f0;
+  background: var(--surface-2);
   line-height: 0;
 }
 
@@ -713,7 +784,7 @@ a {
   width: 100%;
   height: 100%;
   font-size: 1.2rem;
-  background: #e2e8f0;
+  background: var(--surface-2);
 }
 
 /* ---------- Поле фотографий в админке ---------- */
@@ -741,7 +812,7 @@ a {
   aspect-ratio: 16 / 9;
   border-radius: 8px;
   overflow: hidden;
-  background: #e2e8f0;
+  background: var(--surface-2);
   line-height: 0;
 }
 
@@ -837,7 +908,7 @@ a {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 14px 16px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .review-hidden {
@@ -1005,7 +1076,7 @@ a {
 }
 
 .badge-maintenance {
-  background: #e0e7ff;
+  background: var(--primary-soft);
   color: var(--primary);
 }
 
@@ -1125,7 +1196,7 @@ a {
 }
 
 .modal {
-  background: #fff;
+  background: var(--surface);
   border-radius: var(--radius);
   width: 100%;
   max-width: 560px;
@@ -1216,7 +1287,7 @@ a {
   gap: 14px;
   max-height: 58vh;
   overflow-y: auto;
-  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+  background: linear-gradient(180deg, var(--surface-2) 0%, var(--primary-soft) 100%);
 }
 
 .msg {
@@ -1233,7 +1304,7 @@ a {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #0f172a;
+  background: var(--header-bg);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1241,7 +1312,7 @@ a {
 }
 
 .msg-bubble {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px 14px 14px 4px;
   padding: 10px 14px;
@@ -1310,7 +1381,7 @@ a {
 .chat-car {
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
@@ -1367,7 +1438,7 @@ a {
 }
 
 .chip:hover {
-  background: #dbeafe;
+  background: var(--primary-soft);
 }
 
 .chat-input {
@@ -1523,8 +1594,8 @@ a {
 .error-details {
   margin: 14px 0;
   text-align: left;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 0.82rem;
@@ -1540,7 +1611,7 @@ a {
   white-space: pre-wrap;
   word-break: break-word;
   margin: 8px 0 0;
-  color: #7f1d1d;
+  color: var(--danger);
 }
 
 .error-actions {
@@ -1603,7 +1674,7 @@ a {
 .badge-tag {
   background: var(--primary-soft);
   color: var(--primary-dark);
-  border: 1px solid #c7d2fe;
+  border: 1px solid var(--border);
 }
 
 /* Подсказка/предупреждение в форме (например, про категорию прав). */
@@ -1646,7 +1717,7 @@ a {
 .compare-best {
   background: var(--success-soft);
   font-weight: 600;
-  color: #14532d;
+  color: var(--success);
 }
 
 .best-mark {
@@ -1812,7 +1883,7 @@ a {
   .mobile-nav {
     display: flex;
     justify-content: space-around;
-    background: #0f172a;
+    background: var(--header-bg);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
     position: sticky;
@@ -1872,5 +1943,93 @@ a {
   .compare-table th,
   .compare-table td {
     min-width: 130px;
+  }
+}
+
+/* Планшеты: сетки каталога и фильтров становятся уже. */
+@media (max-width: 1024px) {
+  .cars-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filters-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .collections {
+    flex-wrap: wrap;
+  }
+}
+
+/* Телефоны: одна колонка, компактная шапка, удобные тач-цели. */
+@media (max-width: 560px) {
+  .container {
+    padding: 0 14px;
+  }
+
+  .section {
+    padding: 20px 14px;
+  }
+
+  h1 {
+    font-size: 1.45rem;
+  }
+
+  .cars-grid,
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header-inner {
+    padding: 8px 14px;
+  }
+
+  .brand {
+    font-size: 0.98rem;
+  }
+
+  .header-user-name {
+    display: none;
+  }
+
+  .lang-btn {
+    padding: 4px 6px;
+  }
+
+  .collection-chip {
+    font-size: 0.85rem;
+    padding: 8px 12px;
+  }
+
+  .detail-side {
+    padding: 16px;
+  }
+
+  .business-dates {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    margin: 12px;
+  }
+
+  .compare-table th,
+  .compare-table td {
+    min-width: 110px;
+    font-size: 0.85rem;
+  }
+
+  .footer-inner {
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+  }
+
+  .btn {
+    min-height: 42px;
   }
 }

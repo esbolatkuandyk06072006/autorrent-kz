@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { apiGet, apiPost, apiDownload } from '../api.js'
 import { useAuth } from '../AuthContext.jsx'
 import { Alert, Spinner } from '../components/ui.jsx'
+import { useTranslation } from '../i18n.jsx'
 import { money, dateLabel, today, addDays } from '../utils.js'
 
 /**
@@ -12,6 +13,7 @@ import { money, dateLabel, today, addDays } from '../utils.js'
  */
 export default function Business() {
   const { user, isAuth } = useAuth()
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   const [catalog, setCatalog] = useState([])
@@ -139,24 +141,21 @@ export default function Business() {
   }
 
   if (!isAuth) return null
-  if (catalogLoading || ordersLoading) return <Spinner label="Загружаем данные…" />
+  if (catalogLoading || ordersLoading) return <Spinner label={t('common.loading')} />
 
   return (
     <div className="container section">
-      <h1>Для бизнеса</h1>
-      <p className="muted">
-        Оформите заявку на несколько единиц техники для юрлица: укажите название компании и БИН.
-        После подтверждения скачайте счёт в PDF.
-      </p>
+      <h1>{t('business.title')}</h1>
+      <p className="muted">{t('business.subtitle')}</p>
 
       {msg && <Alert kind={msg.kind}>{msg.text}</Alert>}
 
       <div className="business-grid">
         <section className="card">
-          <h2>Новая заявка</h2>
+          <h2>{t('business.newOrder')}</h2>
           <form onSubmit={submit} className="form">
             <label>
-              Название компании
+              {t('business.company')}
               <input
                 type="text"
                 required
@@ -167,7 +166,7 @@ export default function Business() {
               />
             </label>
             <label>
-              БИН (12 цифр)
+              {t('business.bin')}
               <input
                 type="text"
                 required
@@ -179,19 +178,19 @@ export default function Business() {
               />
             </label>
 
-            <h3>Позиции заявки</h3>
+            <h3>{t('business.items')}</h3>
             {form.items.map((item, index) => (
               <div key={index} className="business-item">
                 <div className="business-item-head">
                   <b>#{index + 1}</b>
                   {form.items.length > 1 && (
                     <button type="button" className="btn btn-ghost btn-sm" onClick={() => removeItem(index)}>
-                      Убрать
+                      {t('business.removeItem')}
                     </button>
                   )}
                 </div>
                 <label>
-                  Техника
+                  {t('business.vehicle')}
                   <select
                     required
                     value={item.carId}
@@ -204,7 +203,7 @@ export default function Business() {
                       })
                     }}
                   >
-                    <option value="">— выберите —</option>
+                    <option value="">{t('business.pickVehicle')}</option>
                     {catalog.map((car) => (
                       <option key={car.id} value={car.id}>
                         {car.brand} {car.model} · {car.city} · {money(car.pricePerDay)}/сут
@@ -248,7 +247,7 @@ export default function Business() {
                 ) : (
                   <div className="business-dates">
                     <label>
-                      С
+                      {t('home.startDate')}
                       <input
                         type="date"
                         required
@@ -258,7 +257,7 @@ export default function Business() {
                       />
                     </label>
                     <label>
-                      По
+                      {t('home.endDate')}
                       <input
                         type="date"
                         required
@@ -273,26 +272,26 @@ export default function Business() {
             ))}
 
             <button type="button" className="btn btn-ghost" onClick={addItem} disabled={form.items.length >= 10}>
-              + Добавить позицию
+              + {t('business.addItem')}
             </button>
 
             <button className="btn btn-primary btn-block" disabled={busy}>
-              {busy ? 'Отправляем…' : 'Создать заявку'}
+              {busy ? '…' : t('business.submit')}
             </button>
           </form>
         </section>
 
         <section className="card">
-          <h2>Мои заявки</h2>
+          <h2>{t('business.myOrders')}</h2>
           {orders.length === 0 ? (
-            <p className="muted">Заявок пока нет.</p>
+            <p className="muted">{t('business.empty')}</p>
           ) : (
             <div className="orders-list">
               {orders.map((order) => (
                 <article key={order.id} className="order-card">
                   <div className="order-head">
                     <b>Заявка #{order.id}</b>
-                    <span className="badge badge-soft">{order.status === 'ACTIVE' ? 'Активна' : 'Завершена'}</span>
+                    <span className="badge badge-soft">{order.status === 'ACTIVE' ? t('status.ACTIVE') : t('status.COMPLETED')}</span>
                   </div>
                   <p>
                     {order.companyName} · БИН {order.bin}
@@ -311,14 +310,11 @@ export default function Business() {
                     <b>{money(order.totalPrice)}</b>
                   </div>
                   <div className="order-actions">
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => downloadInvoice(order.id)}
-                    >
-                      📄 Скачать счёт (PDF)
+                    <button className="btn btn-primary btn-sm" onClick={() => downloadInvoice(order.id)}>
+                      📄 {t('business.invoice')}
                     </button>
                     <Link className="btn btn-ghost btn-sm" to="/my-reservations">
-                      Открыть брони
+                      {t('nav.myReservations')}
                     </Link>
                   </div>
                 </article>

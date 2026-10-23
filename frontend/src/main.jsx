@@ -5,18 +5,24 @@ import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { AuthProvider } from './AuthContext.jsx'
 import { LibraryProvider } from './LibraryContext.jsx'
+import { LanguageProvider } from './i18n.jsx'
+import { ThemeProvider } from './ThemeContext.jsx'
 import './styles.css'
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <BrowserRouter>
-        <AuthProvider>
-          <LibraryProvider>
-            <App />
-          </LibraryProvider>
-        </AuthProvider>
-      </BrowserRouter>
+      <ThemeProvider>
+        <LanguageProvider>
+          <BrowserRouter>
+            <AuthProvider>
+              <LibraryProvider>
+                <App />
+              </LibraryProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </LanguageProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   </React.StrictMode>
 )

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { apiPut } from '../api.js'
 import { useAuth } from '../AuthContext.jsx'
 import { Alert } from '../components/ui.jsx'
+import { useTranslation } from '../i18n.jsx'
 import { LICENSE_LABELS } from '../utils.js'
 
 // Категории водительского удостоверения: B — легковые, C/E — грузовые,
@@ -16,6 +17,7 @@ const ROLE_LABELS = {
 
 export default function Profile() {
   const { user, refreshUser } = useAuth()
+  const { t } = useTranslation()
   const [form, setForm] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
@@ -37,7 +39,7 @@ export default function Profile() {
         drivingLicense: form.drivingLicense || null
       })
       await refreshUser()
-      setMessage({ kind: 'success', text: 'Профиль сохранён.' })
+      setMessage({ kind: 'success', text: t('profile.saved') })
     } catch (err) {
       setMessage({ kind: 'error', text: err.message })
     } finally {
@@ -48,7 +50,7 @@ export default function Profile() {
   return (
     <div className="container section narrow">
       <div className="card">
-        <h1>Профиль</h1>
+        <h1>{t('profile.title')}</h1>
         <p className="muted">
           {user?.email} · роль: {ROLE_LABELS[user?.role] || user?.role}
         </p>
@@ -71,7 +73,7 @@ export default function Profile() {
             <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+7 700 000 0000" />
           </label>
           <label>
-            Категория водительского удостоверения
+            {t('profile.license')}
             <select
               value={form.drivingLicense}
               onChange={(e) => setForm({ ...form, drivingLicense: e.target.value })}
@@ -83,12 +85,10 @@ export default function Profile() {
                 </option>
               ))}
             </select>
-            <small className="muted">
-              Нужна для аренды грузовой и спецтехники: права категории C допускают грузовые, E — тяжёлые, SPECIAL — спецтехнику.
-            </small>
+            <small className="muted">{t('profile.licenseHint')}</small>
           </label>
           <button className="btn btn-primary" disabled={saving}>
-            {saving ? 'Сохраняем…' : 'Сохранить'}
+            {saving ? '…' : t('profile.save')}
           </button>
         </form>
       </div>
