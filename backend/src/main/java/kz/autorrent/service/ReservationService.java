@@ -17,8 +17,7 @@ import kz.autorrent.repository.ReservationRepository;
 import kz.autorrent.repository.ReviewRepository;
 import kz.autorrent.repository.UserRepository;
 import kz.autorrent.security.CustomUserDetails;
-import kz.autorrent.service.pricing.PricingResult;
-import kz.autorrent.service.pricing.PricingStrategyResolver;
+import kz.autorrent.service.pricing.PriceQuote;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -27,6 +26,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
+/**
+ * Управление бронями: статусный цикл PENDING → CONFIRMED → ACTIVE → COMPLETED
+ * (CANCELLED на любом активном этапе), просмотр и изменение дат.
+ *
+ * Доступ: админ — всё; владелец техники — брони по своей технике
+ * (подтверждение, активация, завершение); клиент — свои брони.
+ */
 @Service
 @RequiredArgsConstructor
 public class ReservationService {
@@ -35,7 +41,7 @@ public class ReservationService {
     private final VehicleRepository vehicleRepository;
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
-    private final PricingStrategyResolver pricingStrategyResolver;
+    private final PricingService pricingService;
 
     @Transactional(readOnly = true)
     public PageResponse<ReservationResponse> getMy(String email, Pageable pageable) {
@@ -50,6 +56,16 @@ public class ReservationService {
     public PageResponse<ReservationResponse> getAll(Pageable pageable) {
         return PageResponse.from(reservationRepository
                 .findAllWithDetails(pageable)
+                .map(DtoMapper::toReservationResponse));
+    }
+
+    /** Брони по технике владельца (роль OWNER) — для подтверждения заявок. */
+    @Transactional(readOnly = true)
+    public PageResponse<ReservationResponse> getForMyVehicles(String email, Pageable pageable) {
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        return PageResponse.from(reservationRepository
+                .findByVehicleOwnerIdWithDetails(user.getId(), pageable)
                 .map(DtoMapper::toReservationResponse));
     }
 
@@ -68,14 +84,14 @@ public class ReservationService {
         if (!reservation.isActive()) {
             throw new ConflictException("Only pending or confirmed reservations can be cancelled");
         }
-        if (principal.getRole() != Role.ADMIN
-                && !LocalDate.now().isBefore(reservation.getStartDate())) {
+        boolean privileged = principal.getRole() == Role.ADMIN || isVehicleOwner(reservation, principal);
+        if (!privileged && !LocalDate.now().isBefore(reservation.getStartDate())) {
             throw new ConflictException("Reservation can only be cancelled before the rental starts");
         }
 
         String defaultReason = principal.getRole() == Role.ADMIN
                 ? "Cancelled by admin"
-                : "Cancelled by user";
+                : (isVehicleOwner(reservation, principal) ? "Cancelled by owner" : "Cancelled by user");
         reservation.setStatus(ReservationStatus.CANCELLED);
         reservation.setCancellationReason(reason == null || reason.isBlank()
                 ? defaultReason
@@ -110,22 +126,29 @@ public class ReservationService {
             throw new ConflictException("Vehicle is not available for the selected dates");
         }
 
-        long days = BookingRules.daysBetween(request.startDate(), request.endDate());
-        PricingResult pricing = pricingStrategyResolver.resolve(days)
-                .calculate(vehicle.getPricePerDay(), days);
+        // Пересчёт с учётом режима брони (часы/оператор сохраняются как были).
+        PriceQuote quote = pricingService.quote(vehicle, request.startDate(), request.endDate(),
+                reservation.getHours(),
+                Boolean.TRUE.equals(reservation.getWithOperator()));
 
         reservation.setStartDate(request.startDate());
         reservation.setEndDate(request.endDate());
-        reservation.setDaysCount(pricing.days());
-        reservation.setPricePerDaySnapshot(pricing.pricePerDay());
-        reservation.setTotalPrice(pricing.totalPrice());
+        reservation.setDaysCount(quote.days());
+        reservation.setPricePerDaySnapshot(quote.pricePerDay());
+        reservation.setDiscountPercent(quote.discountPercent());
+        reservation.setTotalPrice(quote.totalPrice());
 
         return DtoMapper.toReservationResponse(reservationRepository.save(reservation));
     }
 
+    /**
+     * Смена статуса брони. Доступны: админ и владелец техники.
+     * Цикл: PENDING → CONFIRMED → ACTIVE → COMPLETED; CANCELLED на активных этапах.
+     */
     @Transactional
-    public ReservationResponse updateStatus(Long id, ReservationStatus newStatus) {
+    public ReservationResponse updateStatus(Long id, ReservationStatus newStatus, CustomUserDetails principal) {
         Reservation reservation = find(id);
+        checkManageAccess(reservation, principal);
         ReservationStatus current = reservation.getStatus();
 
         if (current == newStatus) {
@@ -139,13 +162,18 @@ public class ReservationService {
                 && reservation.getVehicle().getStatus() != VehicleStatus.ACTIVE) {
             throw new ConflictException("Vehicle is not active and cannot be confirmed");
         }
+        if (newStatus == ReservationStatus.ACTIVE
+                && LocalDate.now().isBefore(reservation.getStartDate())) {
+            throw new ConflictException("Reservation can be activated only on the rental start date");
+        }
         if (newStatus == ReservationStatus.COMPLETED
                 && reservation.getEndDate().isAfter(LocalDate.now())) {
             throw new ConflictException("Reservation can be completed only after the end date");
         }
         if (newStatus == ReservationStatus.CANCELLED
                 && reservation.getCancellationReason() == null) {
-            reservation.setCancellationReason("Cancelled by admin");
+            reservation.setCancellationReason(principal.getRole() == Role.ADMIN
+                    ? "Cancelled by admin" : "Cancelled by owner");
         }
 
         reservation.setStatus(newStatus);
@@ -169,11 +197,12 @@ public class ReservationService {
                 .orElseThrow(() -> new NotFoundException("Reservation not found: " + id));
     }
 
+    /** Просмотр: админ, владелец техники или сам клиент. */
     private void checkAccess(Reservation reservation, CustomUserDetails principal) {
         if (principal == null) {
             throw new AccessDeniedException("Access denied");
         }
-        if (principal.getRole() == Role.ADMIN) {
+        if (principal.getRole() == Role.ADMIN || isVehicleOwner(reservation, principal)) {
             return;
         }
         if (!reservation.getUser().getId().equals(principal.getId())) {
@@ -181,10 +210,39 @@ public class ReservationService {
         }
     }
 
+    /** Управление статусом: админ или владелец техники. */
+    private void checkManageAccess(Reservation reservation, CustomUserDetails principal) {
+        if (principal == null) {
+            throw new AccessDeniedException("Access denied");
+        }
+        if (principal.getRole() != Role.ADMIN && !isVehicleOwner(reservation, principal)) {
+            throw new AccessDeniedException("Only the vehicle owner or an admin can manage this reservation");
+        }
+    }
+
+    private boolean isVehicleOwner(Reservation reservation, CustomUserDetails principal) {
+        if (principal.getRole() != Role.OWNER) {
+            return false;
+        }
+        Long ownerId = reservation.getVehicle().getOwner() == null
+                ? null : reservation.getVehicle().getOwner().getId();
+        return ownerId != null && ownerId.equals(principal.getId());
+    }
+
+    /**
+     * Статусный цикл брони:
+     * PENDING → CONFIRMED / CANCELLED;
+     * CONFIRMED → ACTIVE / COMPLETED / CANCELLED;
+     * ACTIVE → COMPLETED / CANCELLED;
+     * COMPLETED, CANCELLED — финальные.
+     */
     private boolean isTransitionAllowed(ReservationStatus current, ReservationStatus next) {
         return switch (current) {
             case PENDING -> next == ReservationStatus.CONFIRMED || next == ReservationStatus.CANCELLED;
-            case CONFIRMED -> next == ReservationStatus.COMPLETED || next == ReservationStatus.CANCELLED;
+            case CONFIRMED -> next == ReservationStatus.ACTIVE
+                    || next == ReservationStatus.COMPLETED
+                    || next == ReservationStatus.CANCELLED;
+            case ACTIVE -> next == ReservationStatus.COMPLETED || next == ReservationStatus.CANCELLED;
             case COMPLETED, CANCELLED -> false;
         };
     }

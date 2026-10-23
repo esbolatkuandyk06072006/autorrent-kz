@@ -12,14 +12,17 @@ import Favorites from './pages/Favorites.jsx'
 import Compare from './pages/Compare.jsx'
 import Assistant from './pages/Assistant.jsx'
 import RoutesPage from './pages/Routes.jsx'
+import Business from './pages/Business.jsx'
 import AdminPanel from './pages/admin/AdminPanel.jsx'
 
-function RequireAuth({ children, adminOnly = false }) {
-  const { isAuth, isAdmin } = useAuth()
+function RequireAuth({ children, adminOnly = false, staffOnly = false }) {
+  const { isAuth, isAdmin, canManageVehicles } = useAuth()
   const location = useLocation()
 
   if (!isAuth) return <Navigate to="/login" state={{ from: location.pathname }} replace />
   if (adminOnly && !isAdmin) return <Navigate to="/" replace />
+  // staffOnly: панель управления техникой доступна админу и владельцу (OWNER).
+  if (staffOnly && !isAdmin && !canManageVehicles) return <Navigate to="/" replace />
   return children
 }
 
@@ -54,6 +57,14 @@ export default function App() {
           <Route path="/assistant" element={<Assistant />} />
           <Route path="/routes" element={<RoutesPage />} />
           <Route
+            path="/business"
+            element={
+              <RequireAuth>
+                <Business />
+              </RequireAuth>
+            }
+          />
+          <Route
             path="/my-reservations"
             element={
               <RequireAuth>
@@ -72,7 +83,7 @@ export default function App() {
           <Route
             path="/admin/*"
             element={
-              <RequireAuth adminOnly>
+              <RequireAuth staffOnly>
                 <AdminPanel />
               </RequireAuth>
             }

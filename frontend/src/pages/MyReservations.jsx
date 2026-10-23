@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { apiGet, apiPatch } from '../api.js'
+import { apiGet, apiPatch, apiDownload } from '../api.js'
 import { Alert, EmptyState, Pagination, Spinner, StatusBadge } from '../components/ui.jsx'
 import { RESERVATION_STATUS_LABELS, dateLabel, money } from '../utils.js'
 
@@ -45,6 +45,15 @@ export default function MyReservations() {
     }
   }
 
+  // Скачивание подтверждения брони в PDF (с JWT-токеном).
+  const downloadPdf = async (reservationId) => {
+    try {
+      await apiDownload(`/api/v1/reservations/${reservationId}/pdf`, `reservation-${reservationId}.pdf`)
+    } catch (err) {
+      setMessage({ kind: 'error', text: err.message })
+    }
+  }
+
   return (
     <div className="container section">
       <h1>Мои брони</h1>
@@ -71,7 +80,10 @@ export default function MyReservations() {
         <>
           <div className="reservations">
             {data.content.map((reservation) => {
-              const active = ['PENDING', 'CONFIRMED'].includes(reservation.status)
+              // Активными считаются ожидающие, подтверждённые и активные брони.
+              const active = ['PENDING', 'CONFIRMED', 'ACTIVE'].includes(reservation.status)
+              // Отменить можно только до старта аренды (или если она ещё не началась).
+              const canCancel = ['PENDING', 'CONFIRMED'].includes(reservation.status)
               return (
                 <article key={reservation.id} className="card reservation">
                   <div className="reservation-head">
@@ -89,15 +101,27 @@ export default function MyReservations() {
                   </div>
                   <div className="reservation-dates">
                     <span>
-                      {dateLabel(reservation.startDate)} → {dateLabel(reservation.endDate)} · {reservation.daysCount} дн.
+                      {dateLabel(reservation.startDate)} → {dateLabel(reservation.endDate)} ·{' '}
+                      {reservation.hours ? `${reservation.hours} ч` : `${reservation.daysCount} дн.`}
+                      {reservation.withOperator ? ' · с оператором' : ''}
                     </span>
                     <b>{money(reservation.totalPrice)}</b>
                   </div>
+                  {reservation.discountPercent > 0 && (
+                    <p className="reservation-discount">
+                      🎉 Применена скидка {reservation.discountPercent}% за длительную аренду.
+                    </p>
+                  )}
                   {reservation.cancellationReason && (
                     <p className="reservation-reason">Причина отмены: {reservation.cancellationReason}</p>
                   )}
-                  {active && (
-                    <div className="reservation-actions">
+                  <div className="reservation-actions">
+                    {active && (
+                      <button className="btn btn-ghost btn-sm" onClick={() => downloadPdf(reservation.id)}>
+                        📄 Скачать PDF
+                      </button>
+                    )}
+                    {canCancel && (
                       <button
                         className="btn btn-danger btn-sm"
                         onClick={() => {
@@ -107,8 +131,8 @@ export default function MyReservations() {
                       >
                         Отменить бронь
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </article>
               )
             })}

@@ -50,6 +50,9 @@ export function AuthProvider({ children }) {
       user,
       isAuth: !!user,
       isAdmin: user?.role === 'ADMIN',
+      isOwner: user?.role === 'OWNER',
+      // Владелец техники и админ управляют техникой и бронями по ней.
+      canManageVehicles: user?.role === 'ADMIN' || user?.role === 'OWNER',
       token: getToken(),
       login,
       register,

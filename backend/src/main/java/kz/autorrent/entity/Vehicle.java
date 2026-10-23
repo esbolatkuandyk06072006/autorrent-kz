@@ -99,6 +99,25 @@ public class Vehicle {
     @Column(nullable = false, length = 50)
     private String city;
 
+    /**
+     * Владелец/арендодатель (роль OWNER). Техника без владельца принадлежит
+     * платформе (её управляет админ). Владелец добавляет свою технику и
+     * подтверждает брони по ней.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    private User owner;
+
+    /**
+     * Теги для умных подборок: construction (стройка), wedding (свадьба),
+     * mountains (горы), city (город), longtrip (трасса), family (семья).
+     */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "vehicle_tags", joinColumns = @JoinColumn(name = "vehicle_id"))
+    @Column(name = "tag", length = 30)
+    @Builder.Default
+    private List<String> tags = new ArrayList<>();
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private VehicleStatus status;

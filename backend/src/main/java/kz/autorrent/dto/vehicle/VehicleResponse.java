@@ -29,6 +29,9 @@ public record VehicleResponse(
         String imageUrl,
         List<String> images,
         Double averageRating,
-        Long reviewCount
+        Long reviewCount,
+        List<String> tags,
+        Long ownerId,
+        String ownerName
 ) {
 }

@@ -6,12 +6,12 @@ import kz.autorrent.entity.Vehicle;
 import kz.autorrent.entity.Reservation;
 import kz.autorrent.entity.User;
 import kz.autorrent.entity.enums.*;
+import kz.autorrent.exception.BadRequestException;
 import kz.autorrent.exception.ConflictException;
 import kz.autorrent.repository.VehicleRepository;
 import kz.autorrent.repository.ReservationRepository;
 import kz.autorrent.repository.UserRepository;
-import kz.autorrent.service.pricing.PricingStrategyResolver;
-import kz.autorrent.service.pricing.StandardPricingStrategy;
+import kz.autorrent.service.pricing.PriceQuote;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,7 +38,7 @@ class BookingFacadeTest {
     @Mock
     private ReservationRepository reservationRepository;
     @Mock
-    private PricingStrategyResolver pricingStrategyResolver;
+    private PricingService pricingService;
     @Mock
     private ReservationFactory reservationFactory;
 
@@ -58,6 +58,7 @@ class BookingFacadeTest {
                 .email("user@test.kz")
                 .firstName("Test")
                 .lastName("User")
+                .drivingLicense(VehicleLicense.B)
                 .role(Role.USER)
                 .build();
 
@@ -72,6 +73,7 @@ class BookingFacadeTest {
                 .transmission(Transmission.AUTOMATIC)
                 .fuelType(FuelType.PETROL)
                 .seats(5)
+                .requiredLicense(VehicleLicense.B)
                 .pricePerDay(new BigDecimal("20000.00"))
                 .city("Almaty")
                 .status(VehicleStatus.ACTIVE)
@@ -84,6 +86,9 @@ class BookingFacadeTest {
 
     @Test
     void booksVehicleAndCalculatesTotalPrice() {
+        PriceQuote quote = new PriceQuote("DAY", 4, null, new BigDecimal("20000.00"), null,
+                new BigDecimal("80000.00"), new BigDecimal("0.00"), new BigDecimal("0.00"),
+                null, BigDecimal.ZERO, new BigDecimal("80000.00"));
         Reservation reservation = Reservation.builder()
                 .user(user)
                 .vehicle(vehicle)
@@ -99,7 +104,8 @@ class BookingFacadeTest {
         when(vehicleRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(vehicle));
         when(reservationRepository.countOverlapping(eq(1L), eq(start), eq(end), anyCollection()))
                 .thenReturn(0L);
-        when(pricingStrategyResolver.resolve(4)).thenReturn(new StandardPricingStrategy());
+        when(pricingService.quote(eq(vehicle), eq(start), eq(end), isNull(), any()))
+                .thenReturn(quote);
         when(reservationFactory.create(eq(user), eq(vehicle), eq(start), eq(end), any()))
                 .thenReturn(reservation);
         when(reservationRepository.save(any(Reservation.class))).thenAnswer(invocation -> {
@@ -137,5 +143,46 @@ class BookingFacadeTest {
         assertThatThrownBy(() -> bookingFacade.bookCar("user@test.kz", request))
                 .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("not available");
+    }
+
+    @Test
+    void rejectsBookingWithoutLicense() {
+        user.setDrivingLicense(null);
+        when(userRepository.findByEmailIgnoreCase("user@test.kz")).thenReturn(Optional.of(user));
+        when(vehicleRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(vehicle));
+
+        assertThatThrownBy(() -> bookingFacade.bookCar("user@test.kz", request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("driving licence");
+    }
+
+    @Test
+    void rejectsBookingWithWrongLicense() {
+        user.setDrivingLicense(VehicleLicense.B);
+        vehicle.setRequiredLicense(VehicleLicense.SPECIAL);
+        when(userRepository.findByEmailIgnoreCase("user@test.kz")).thenReturn(Optional.of(user));
+        when(vehicleRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(vehicle));
+
+        assertThatThrownBy(() -> bookingFacade.bookCar("user@test.kz", request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("does not allow");
+    }
+
+    @Test
+    void rejectsHourlyBookingWithoutHourlyPrice() {
+        vehicle.setPricePerHour(null);
+        vehicle.setRequiredLicense(VehicleLicense.SPECIAL);
+        user.setDrivingLicense(VehicleLicense.SPECIAL);
+        ReservationRequest hourly = new ReservationRequest(1L, start, start, 4, null);
+        when(userRepository.findByEmailIgnoreCase("user@test.kz")).thenReturn(Optional.of(user));
+        when(vehicleRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(vehicle));
+        when(reservationRepository.countOverlapping(eq(1L), eq(start), eq(start.plusDays(1)), anyCollection()))
+                .thenReturn(0L);
+        when(pricingService.quote(eq(vehicle), eq(start), eq(start.plusDays(1)), eq(4), any()))
+                .thenThrow(new BadRequestException("Hourly rental is not available for this vehicle"));
+
+        assertThatThrownBy(() -> bookingFacade.bookCar("user@test.kz", hourly))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Hourly rental is not available");
     }
 }

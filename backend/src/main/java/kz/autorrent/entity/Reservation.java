@@ -44,6 +44,32 @@ public class Reservation {
     @Column(name = "days_count", nullable = false)
     private long daysCount;
 
+    /**
+     * Часы аренды (почасовой режим, для спецтехники). Если заданы — бронь
+     * почасовая: daysCount = 0, цена = pricePerHourSnapshot * hours.
+     * Хранится отдельно, чтобы календарь занятости работал корректно.
+     */
+    @Column
+    private Integer hours;
+
+    /** Аренда с оператором/водителем: в итог вошла суточная цена оператора. */
+    @Builder.Default
+    @Column(name = "with_operator", nullable = false)
+    private Boolean withOperator = false;
+
+    /** Поясовая цена на момент брони (для почасового режима). */
+    @Column(name = "price_per_hour_snapshot", precision = 10, scale = 2)
+    private BigDecimal pricePerHourSnapshot;
+
+    /** Применённая скидка в процентах (10 с 7 дней, 20 с 30 дней). */
+    @Column(name = "discount_percent", precision = 5, scale = 2)
+    private BigDecimal discountPercent;
+
+    /** Бизнес-заявка (счёт на юрлицо), если бронь создана в режиме «Для бизнеса». */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "business_order_id")
+    private BusinessOrder businessOrder;
+
     @Column(name = "price_per_day_snapshot", nullable = false, precision = 10, scale = 2)
     private BigDecimal pricePerDaySnapshot;
 
@@ -66,7 +92,10 @@ public class Reservation {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    /** Активная аренда: ожидает подтверждения, подтверждена или уже идёт. */
     public boolean isActive() {
-        return status == ReservationStatus.PENDING || status == ReservationStatus.CONFIRMED;
+        return status == ReservationStatus.PENDING
+                || status == ReservationStatus.CONFIRMED
+                || status == ReservationStatus.ACTIVE;
     }
 }

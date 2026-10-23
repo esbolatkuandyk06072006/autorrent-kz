@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext.jsx'
 import { Alert } from '../components/ui.jsx'
+import { LICENSE_LABELS } from '../utils.js'
+
+const LICENSE_OPTIONS = ['B', 'C', 'E', 'SPECIAL']
 
 export default function Register() {
   const { register } = useAuth()
@@ -11,7 +14,11 @@ export default function Register() {
     password: '',
     firstName: '',
     lastName: '',
-    phone: ''
+    phone: '',
+    // Роль: USER — клиент, OWNER — владелец техники (добавляет технику и
+    // подтверждает брони). Роль ADMIN назначается только администратором.
+    role: 'USER',
+    drivingLicense: ''
   })
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -23,7 +30,11 @@ export default function Register() {
     setError(null)
     setLoading(true)
     try {
-      await register({ ...form, phone: form.phone.trim() || null })
+      await register({
+        ...form,
+        phone: form.phone.trim() || null,
+        drivingLicense: form.drivingLicense || null
+      })
       navigate('/', { replace: true })
     } catch (err) {
       const fields = err.fieldErrors
@@ -76,6 +87,33 @@ export default function Register() {
             Телефон <span className="muted">(необязательно)</span>
             <input value={form.phone} onChange={update('phone')} placeholder="+7 700 000 0000" />
           </label>
+
+          <label>
+            Кто вы
+            <select value={form.role} onChange={update('role')}>
+              <option value="USER">Клиент — хочу бронировать технику</option>
+              <option value="OWNER">Владелец техники — хочу сдавать свою технику</option>
+            </select>
+            <small className="muted">
+              Владелец добавляет свою технику в каталог и подтверждает брони по ней.
+            </small>
+          </label>
+
+          <label>
+            Категория прав <span className="muted">(необязательно)</span>
+            <select value={form.drivingLicense} onChange={update('drivingLicense')}>
+              <option value="">— не указана —</option>
+              {LICENSE_OPTIONS.map((code) => (
+                <option key={code} value={code}>
+                  {LICENSE_LABELS[code] || code}
+                </option>
+              ))}
+            </select>
+            <small className="muted">
+              Нужна для аренды грузовой и спецтехники. Можно указать позже в профиле.
+            </small>
+          </label>
+
           <button className="btn btn-primary btn-block" disabled={loading}>
             {loading ? 'Создаём аккаунт…' : 'Зарегистрироваться'}
           </button>

@@ -1551,6 +1551,232 @@ a {
   margin-top: 8px;
 }
 
+/* ---------- Шаг 4: подборки, теги, бизнес, сравнение ---------- */
+
+/* Умные подборки на главной: «для стройки», «для свадьбы», «для гор». */
+.collections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.collection-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: all 0.12s;
+  font-family: inherit;
+}
+
+.collection-chip:hover {
+  border-color: var(--primary);
+  color: var(--primary-dark);
+}
+
+.collection-chip-on {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  font-weight: 600;
+}
+
+.collection-icon {
+  font-size: 1.05rem;
+}
+
+/* Теги умной подборки в карточке техники. */
+.detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.badge-tag {
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  border: 1px solid #c7d2fe;
+}
+
+/* Подсказка/предупреждение в форме (например, про категорию прав). */
+.field-warn {
+  display: block;
+  color: var(--warning);
+  font-size: 0.84rem;
+  margin-top: 4px;
+}
+
+.field-warn a {
+  color: var(--primary-dark);
+}
+
+/* Переключатель режима аренды: по суткам / по часам. */
+.rental-mode {
+  display: flex;
+  gap: 8px;
+}
+
+.rental-mode .btn {
+  flex: 1;
+}
+
+/* Чекбокс «с оператором». */
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.94rem;
+  cursor: pointer;
+}
+
+.checkbox-row input {
+  width: 18px;
+  height: 18px;
+}
+
+/* Подсветка лучшего значения в сравнении. */
+.compare-best {
+  background: var(--success-soft);
+  font-weight: 600;
+  color: #14532d;
+}
+
+.best-mark {
+  color: var(--success);
+}
+
+/* Теги в панели админа (владельца). */
+.tags-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.86rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tag-chip input {
+  width: 15px;
+  height: 15px;
+}
+
+.tag-chip-on {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+/* Страница «Для бизнеса». */
+.business-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 18px;
+  margin-top: 18px;
+  align-items: start;
+}
+
+.business-item {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.business-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.business-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.order-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.order-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.order-items {
+  margin: 8px 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.order-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  margin-bottom: 10px;
+}
+
+.order-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reservation-discount {
+  color: var(--success);
+  font-size: 0.9rem;
+  margin: 4px 0 0;
+}
+
+@media (max-width: 900px) {
+  .business-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 1080px) {

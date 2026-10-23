@@ -10,8 +10,11 @@ const NAV_ITEMS = [
   { to: '/routes', label: 'Маршруты', icon: '🗺' }
 ]
 
+// Пункт «Для бизнеса» — счёт на юрлицо, доступен только авторизованным.
+const BUSINESS_ITEM = { to: '/business', label: 'Для бизнеса', icon: '🏢' }
+
 export default function Header() {
-  const { user, isAuth, isAdmin, logout } = useAuth()
+  const { user, isAuth, isAdmin, canManageVehicles, logout } = useAuth()
   const { favorites, compare } = useLibrary()
   const navigate = useNavigate()
 
@@ -21,6 +24,7 @@ export default function Header() {
   }
 
   const badgeCount = (key) => (key === 'favorites' ? favorites.length : compare.length)
+  const items = isAuth ? [...NAV_ITEMS, BUSINESS_ITEM] : NAV_ITEMS
 
   return (
     <header className="header">
@@ -33,7 +37,7 @@ export default function Header() {
         </Link>
 
         <nav className="nav">
-          {NAV_ITEMS.map((item) => {
+          {items.map((item) => {
             const count = item.badge ? badgeCount(item.badge) : 0
             return (
               <NavLink key={item.to} to={item.to} end={item.end} className="nav-item">
@@ -49,10 +53,10 @@ export default function Header() {
               <span className="nav-label">Мои брони</span>
             </NavLink>
           )}
-          {isAdmin && (
+          {canManageVehicles && (
             <NavLink to="/admin" className="nav-item">
               <span className="nav-icon">🛠</span>
-              <span className="nav-label">Админ</span>
+              <span className="nav-label">{isAdmin ? 'Админ' : 'Моя техника'}</span>
             </NavLink>
           )}
         </nav>
@@ -64,6 +68,7 @@ export default function Header() {
                 <span className="avatar">{user.firstName?.[0] || 'U'}</span>
                 <span className="header-user-name">{user.firstName}</span>
                 {isAdmin && <span className="badge badge-admin">ADMIN</span>}
+                {!isAdmin && user.role === 'OWNER' && <span className="badge badge-admin">OWNER</span>}
               </Link>
               <button className="btn btn-ghost btn-sm" onClick={handleLogout}>
                 Выйти
@@ -84,7 +89,7 @@ export default function Header() {
 
       {/* compact tab bar for narrow screens */}
       <nav className="mobile-nav">
-        {NAV_ITEMS.map((item) => {
+        {items.map((item) => {
           const count = item.badge ? badgeCount(item.badge) : 0
           return (
             <NavLink key={item.to} to={item.to} end={item.end} className="mobile-nav-item">
@@ -94,10 +99,10 @@ export default function Header() {
             </NavLink>
           )
         })}
-        {isAdmin && (
+        {canManageVehicles && (
           <NavLink to="/admin" className="mobile-nav-item">
             <span className="nav-icon">🛠</span>
-            <span>Админ</span>
+            <span>{isAdmin ? 'Админ' : 'Техника'}</span>
           </NavLink>
         )}
       </nav>

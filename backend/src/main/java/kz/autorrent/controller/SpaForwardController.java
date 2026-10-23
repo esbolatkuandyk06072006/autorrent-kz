@@ -23,6 +23,7 @@ public class SpaForwardController {
             "/routes",
             "/my-reservations",
             "/profile",
+            "/business",
             "/admin",
             "/admin/{path:[a-z\\-]+}"
     })

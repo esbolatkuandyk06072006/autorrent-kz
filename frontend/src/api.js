@@ -54,6 +54,37 @@ export const apiPut = (path, body) => api(path, { method: 'PUT', body })
 export const apiPatch = (path, body, params) => api(path, { method: 'PATCH', body, params })
 export const apiDelete = (path) => api(path, { method: 'DELETE' })
 
+// Скачивание файла (PDF) с JWT: fetch → blob → временная ссылка для сохранения.
+export async function apiDownload(path, filename) {
+  const headers = {}
+  const token = getToken()
+  if (token) headers.Authorization = `Bearer ${token}`
+
+  const response = await fetch(path, { method: 'GET', headers })
+  if (!response.ok) {
+    const text = await response.text()
+    let data = null
+    try {
+      data = text ? JSON.parse(text) : null
+    } catch {
+      data = { message: text }
+    }
+    const error = new Error(data?.message || `Ошибка HTTP ${response.status}`)
+    error.status = response.status
+    throw error
+  }
+
+  const blob = await response.blob()
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
+
 // Multipart upload: sends FormData (files) without a JSON Content-Type header.
 // Used for uploading vehicle photos to /api/v1/vehicles/{id}/images.
 export async function apiUpload(path, files) {

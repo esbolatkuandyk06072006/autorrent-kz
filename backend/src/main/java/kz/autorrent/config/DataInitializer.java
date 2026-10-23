@@ -10,8 +10,7 @@ import kz.autorrent.repository.ReservationRepository;
 import kz.autorrent.repository.ReviewRepository;
 import kz.autorrent.repository.UserRepository;
 import kz.autorrent.service.ReservationFactory;
-import kz.autorrent.service.pricing.PricingResult;
-import kz.autorrent.service.pricing.PricingStrategyResolver;
+import kz.autorrent.service.PricingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -36,7 +35,7 @@ public class DataInitializer implements CommandLineRunner {
     private final ReservationRepository reservationRepository;
     private final ReviewRepository reviewRepository;
     private final PasswordEncoder passwordEncoder;
-    private final PricingStrategyResolver pricingStrategyResolver;
+    private final PricingService pricingService;
     private final ReservationFactory reservationFactory;
 
     @Override
@@ -63,7 +62,22 @@ public class DataInitializer implements CommandLineRunner {
                 .firstName("Demo")
                 .lastName("User")
                 .phone("+77000000002")
+                // Права категории B — хватает для легковых машин в каталоге.
+                .drivingLicense(VehicleLicense.B)
                 .role(Role.USER)
+                .enabled(true)
+                .build());
+
+        // Владелец техники (роль OWNER): добавляет свою технику и подтверждает
+        // брони по ней. Ему принадлежат все спецмашины каталога (см. ниже).
+        User owner = userRepository.save(User.builder()
+                .email("owner@autorrent.kz")
+                .passwordHash(passwordEncoder.encode("Owner123!"))
+                .firstName("Owner")
+                .lastName("Rent")
+                .phone("+77000000003")
+                .drivingLicense(VehicleLicense.SPECIAL)
+                .role(Role.OWNER)
                 .enabled(true)
                 .build());
 
@@ -81,6 +95,13 @@ public class DataInitializer implements CommandLineRunner {
             }
             v.setImages(photos);
             v.setImageUrl(photos.get(0));
+
+            // Владелец: спецтехника и часть грузовых принадлежат роли OWNER,
+            // остальное — платформе (админ). Теги — для умных подборок.
+            if (v.getType() == VehicleType.SPECIAL) {
+                v.setOwner(owner);
+            }
+            v.setTags(seedTags(v));
         }
         vehicleRepository.saveAll(vehicles);
 
@@ -92,10 +113,9 @@ public class DataInitializer implements CommandLineRunner {
 
         LocalDate completedStart = LocalDate.now().minusDays(12);
         LocalDate completedEnd = completedStart.plusDays(4);
-        PricingResult completedPricing = pricingStrategyResolver.resolve(4)
-                .calculate(camry.getPricePerDay(), 4);
         Reservation completed = reservationFactory.create(
-                demoUser, camry, completedStart, completedEnd, completedPricing);
+                demoUser, camry, completedStart, completedEnd,
+                pricingService.quote(camry, completedStart, completedEnd, null, false));
         completed.setStatus(ReservationStatus.COMPLETED);
         reservationRepository.save(completed);
 
@@ -108,14 +128,13 @@ public class DataInitializer implements CommandLineRunner {
 
         LocalDate confirmedStart = LocalDate.now().plusDays(5);
         LocalDate confirmedEnd = confirmedStart.plusDays(3);
-        PricingResult confirmedPricing = pricingStrategyResolver.resolve(3)
-                .calculate(tucson.getPricePerDay(), 3);
         Reservation confirmed = reservationFactory.create(
-                demoUser, tucson, confirmedStart, confirmedEnd, confirmedPricing);
+                demoUser, tucson, confirmedStart, confirmedEnd,
+                pricingService.quote(tucson, confirmedStart, confirmedEnd, null, false));
         confirmed.setStatus(ReservationStatus.CONFIRMED);
         reservationRepository.save(confirmed);
 
-        log.info("Demo data created ({} vehicles). ADMIN: admin@autorrent.kz / Admin123! ; USER: user@autorrent.kz / User123! ; admin id={}",
+        log.info("Demo data created ({} vehicles). ADMIN: admin@autorrent.kz / Admin123! ; USER: user@autorrent.kz / User123! ; OWNER: owner@autorrent.kz / Owner123! ; admin id={}",
                 vehicles.size(), admin.getId());
     }
 
@@ -355,5 +374,36 @@ public class DataInitializer implements CommandLineRunner {
                 .description(description)
                 .imageUrl(imageUrl);
         return b.build();
+    }
+
+    /**
+     * Теги умных подборок по типу техники и городу: «для стройки», «для
+     * свадьбы», «для поездки в горы», «для города», «для семьи», «по трассе».
+     */
+    private List<String> seedTags(Vehicle v) {
+        List<String> tags = new ArrayList<>();
+        switch (v.getType()) {
+            case SPECIAL -> tags.add("construction");
+            case CARGO -> tags.add("construction");
+            case PASSENGER -> {
+                switch (v.getCategory()) {
+                    case SUV -> {
+                        tags.add("mountains");
+                        tags.add("family");
+                    }
+                    case BUSINESS -> tags.add("wedding");
+                    case ELECTRIC -> tags.add("city");
+                    case COMFORT -> {
+                        tags.add("city");
+                        tags.add("wedding");
+                    }
+                    case ECONOMY -> tags.add("city");
+                    default -> tags.add("city");
+                }
+                tags.add("longtrip");
+            }
+            default -> tags.add("city");
+        }
+        return tags;
     }
 }

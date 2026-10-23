@@ -67,7 +67,7 @@ class AiAssistantServiceTest {
         Page<Vehicle> page = new PageImpl<>(List.of(
                 vehicle(1L, "Toyota", "Camry", "Almaty", VehicleCategory.COMFORT)));
         when(vehicleRepository.search(eq(VehicleStatus.ACTIVE), isNull(), isNull(), eq("Almaty"),
-                eq(VehicleCategory.COMFORT), any(), isNull(), isNull(), any(Pageable.class))).thenReturn(page);
+                eq(VehicleCategory.COMFORT), any(), isNull(), isNull(), isNull(), any(Pageable.class))).thenReturn(page);
         when(reviewRepository.averageRating(1L, ReviewStatus.VISIBLE)).thenReturn(4.8);
         when(reviewRepository.countByReservationVehicleIdAndStatus(1L, ReviewStatus.VISIBLE)).thenReturn(5L);
 
@@ -98,7 +98,7 @@ class AiAssistantServiceTest {
     @Test
     void asksForCriteriaWhenNoSearchWordsButGreets() {
         when(vehicleRepository.search(eq(VehicleStatus.ACTIVE), isNull(), isNull(), isNull(),
-                isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
+                isNull(), isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         AiChatResponse response = service.chat("привет");
@@ -109,7 +109,7 @@ class AiAssistantServiceTest {
     @Test
     void reportsEmptyResultWithHelpfulHint() {
         when(vehicleRepository.search(eq(VehicleStatus.ACTIVE), isNull(), isNull(), eq("Astana"),
-                eq(VehicleCategory.SUV), any(), isNull(), isNull(), any(Pageable.class)))
+                eq(VehicleCategory.SUV), any(), isNull(), isNull(), isNull(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         AiChatResponse response = service.chat("внедорожник до 5000 в Астане");

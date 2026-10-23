@@ -7,6 +7,7 @@ import {
   CITIES,
   CATEGORY_GROUPS,
   CATEGORY_LABELS,
+  COLLECTIONS,
   VEHICLE_TYPE_LABELS,
   today,
   addDays
@@ -19,6 +20,7 @@ const isPassenger = (type) => type === 'PASSENGER' || type === ''
 export default function Cars() {
   const [searchParams] = useSearchParams()
   const initialCategory = searchParams.get('category') || ''
+  const initialTag = searchParams.get('tag') || ''
   const [filters, setFilters] = useState({
     brand: '',
     city: '',
@@ -28,7 +30,8 @@ export default function Cars() {
     maxCapacity: '',
     withOperator: '',
     startDate: '',
-    endDate: ''
+    endDate: '',
+    tag: initialTag
   })
   const [page, setPage] = useState(0)
   const [data, setData] = useState(null)
@@ -95,8 +98,15 @@ export default function Cars() {
       maxCapacity: '',
       withOperator: '',
       startDate: '',
-      endDate: ''
+      endDate: '',
+      tag: ''
     })
+    setPage(0)
+  }
+
+  // Выбор умной подборки: клик по чипсу переключает тег (повторный — снимает).
+  const pickTag = (tag) => {
+    setFilters((f) => ({ ...f, tag: f.tag === tag ? '' : tag }))
     setPage(0)
   }
 
@@ -107,12 +117,35 @@ export default function Cars() {
           <h1>Аренда техники по Казахстану</h1>
           <p>
             Легковые, грузовые и спецтехника. Выберите группу, затем класс — и забронируйте за минуту.
-            Цена считается сразу, скидка от 7 дней — 10%.
+            Цена считается сразу: скидка 10% с 7 дней и 20% с 30 дней.
           </p>
         </div>
       </section>
 
       <div className="container section">
+        {/* Умные подборки: «для стройки», «для свадьбы», «для поездки в горы». */}
+        <div className="collections">
+          {COLLECTIONS.map((collection) => {
+            const active = filters.tag === collection.tag
+            return (
+              <button
+                key={collection.key}
+                type="button"
+                className={`collection-chip ${active ? 'collection-chip-on' : ''}`}
+                onClick={() => pickTag(collection.tag)}
+              >
+                <span className="collection-icon">{collection.icon}</span>
+                {collection.title}
+              </button>
+            )
+          })}
+          {filters.tag && (
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => pickTag(filters.tag)}>
+              Показать всё
+            </button>
+          )}
+        </div>
+
         <div className="filters card">
           <div className="filters-grid">
             <label>

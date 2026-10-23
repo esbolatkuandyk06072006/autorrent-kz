@@ -121,7 +121,7 @@ public class AiAssistantService {
 
     private List<VehicleResponse> searchVehicles(BigDecimal budget, String city, VehicleCategory category) {
         Page<kz.autorrent.entity.Vehicle> page = vehicleRepository.search(
-                VehicleStatus.ACTIVE, null, null, city, category, budget, null, null,
+                VehicleStatus.ACTIVE, null, null, city, category, budget, null, null, null,
                 PageRequest.of(0, 3, Sort.by("pricePerDay").ascending()));
 
         List<VehicleResponse> result = new ArrayList<>();

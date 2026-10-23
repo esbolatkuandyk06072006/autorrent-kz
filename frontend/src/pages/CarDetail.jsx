@@ -10,6 +10,8 @@ import {
   FUEL_LABELS,
   LICENSE_LABELS,
   REVIEW_STATUS_LABELS,
+  TAG_ICONS,
+  TAG_LABELS,
   TRANSMISSION_LABELS,
   VEHICLE_TYPE_LABELS,
   addDays,
@@ -34,6 +36,14 @@ export default function CarDetail() {
   const [booking, setBooking] = useState({ startDate: addDays(today(), 1), endDate: addDays(today(), 4) })
   const [bookingBusy, setBookingBusy] = useState(false)
   const [bookingMsg, setBookingMsg] = useState(null)
+
+  // Шаг 4: календарь занятости, почасовая аренда, оператор и серверный расчёт.
+  const [busyDates, setBusyDates] = useState([])
+  const [rentalMode, setRentalMode] = useState('DAY') // 'DAY' | 'HOUR'
+  const [hours, setHours] = useState(4)
+  const [withOperator, setWithOperator] = useState(false)
+  const [serverQuote, setServerQuote] = useState(null)
+  const [quoteLoading, setQuoteLoading] = useState(false)
 
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' })
   const [reviewBusy, setReviewBusy] = useState(false)
@@ -61,23 +71,68 @@ export default function CarDetail() {
     load()
   }, [load])
 
+  // Занятые даты для календаря: их нельзя выбрать при бронировании.
+  useEffect(() => {
+    let alive = true
+    apiGet(`/api/v1/vehicles/${id}/busy-dates`)
+      .then((data) => alive && setBusyDates(Array.isArray(data) ? data : []))
+      .catch(() => alive && setBusyDates([]))
+    return () => {
+      alive = false
+    }
+  }, [id])
+
   // При загрузке другой машины возвращаемся к первому фото.
   useEffect(() => {
     setActivePhoto(0)
   }, [id])
 
-  const preview = previewPrice(car?.pricePerDay, booking.startDate, booking.endDate)
+  // Если у машины есть почасовая цена — предлагаем и почасовой режим.
+  useEffect(() => {
+    if (car && !car.pricePerHour) setRentalMode('DAY')
+  }, [car])
+
+  // Серверный расчёт стоимости (скидки, оператор, часы).
+  useEffect(() => {
+    if (!car || car.status !== 'ACTIVE') {
+      setServerQuote(null)
+      return
+    }
+    let alive = true
+    setQuoteLoading(true)
+    const params = rentalMode === 'HOUR'
+      ? { startDate: booking.startDate, hours: Number(hours) }
+      : { startDate: booking.startDate, endDate: booking.endDate, withOperator }
+    apiGet(`/api/v1/vehicles/${id}/price-quote`, params)
+      .then((data) => alive && setServerQuote(data))
+      .catch(() => alive && setServerQuote(null))
+      .finally(() => alive && setQuoteLoading(false))
+    return () => {
+      alive = false
+    }
+  }, [id, car, rentalMode, hours, booking.startDate, booking.endDate, withOperator])
+
+  const preview = previewPrice(car?.pricePerDay, booking.startDate, booking.endDate, {
+    withOperator,
+    operatorPricePerDay: car?.operatorPricePerDay
+  })
+
+  // Занятая дата? Такую дату нельзя выбрать в календаре.
+  const isBusy = (iso) => busyDates.includes(iso)
+
+  // Если выбранные даты стали заняты — подсвечиваем, но не блокируем страницу.
+  const startBusy = isBusy(booking.startDate)
+  const endBusy = rentalMode === 'DAY' && isBusy(booking.endDate)
 
   const book = async (e) => {
     e.preventDefault()
     setBookingMsg(null)
     setBookingBusy(true)
     try {
-      await apiPost('/api/v1/reservations', {
-        carId: Number(id),
-        startDate: booking.startDate,
-        endDate: booking.endDate
-      })
+      const payload = rentalMode === 'HOUR'
+        ? { carId: Number(id), startDate: booking.startDate, hours: Number(hours) }
+        : { carId: Number(id), startDate: booking.startDate, endDate: booking.endDate, withOperator }
+      await apiPost('/api/v1/reservations', payload)
       setBookingMsg({ kind: 'success', text: 'Бронь создана! Статус — «Ожидает». Посмотреть её можно в разделе «Мои брони».' })
     } catch (err) {
       if (err.status === 401) {
@@ -171,6 +226,25 @@ export default function CarDetail() {
             <span className="badge badge-soft">📍 {car.city}</span>
             <StatusBadge value={car.status} labels={CAR_STATUS_LABELS} />
           </div>
+
+          {/* Теги умных подборок: «для стройки», «для свадьбы», «для гор». */}
+          {Array.isArray(car.tags) && car.tags.length > 0 && (
+            <div className="detail-tags">
+              {car.tags.map((tag) => (
+                <span key={tag} className="badge badge-tag">
+                  {TAG_ICONS[tag] || '•'} {TAG_LABELS[tag] || tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Подсказка про права: если у машины категория, а у клиента её нет. */}
+          {isAuth && !isAdmin && car.requiredLicense && user?.drivingLicense !== car.requiredLicense && (
+            <p className="field-warn">
+              ⚠ Для аренды нужны права категории {LICENSE_LABELS[car.requiredLicense] || car.requiredLicense}.
+              Укажите категорию в <a href="/profile">профиле</a>.
+            </p>
+          )}
           {car.description && <p className="detail-desc">{car.description}</p>}
           {car.averageRating != null && (
             <p className="detail-rating">
@@ -197,40 +271,130 @@ export default function CarDetail() {
 
           {car.status === 'ACTIVE' ? (
             <form onSubmit={book} className="form">
-              <label>
-                Дата начала
-                <input
-                  type="date"
-                  required
-                  min={today()}
-                  value={booking.startDate}
-                  onChange={(e) => setBooking({ ...booking, startDate: e.target.value })}
-                />
-              </label>
-              <label>
-                Дата окончания
-                <input
-                  type="date"
-                  required
-                  min={booking.startDate || today()}
-                  value={booking.endDate}
-                  onChange={(e) => setBooking({ ...booking, endDate: e.target.value })}
-                />
-              </label>
+              {/* Режим аренды: суточно или почасово (если есть почасовая цена). */}
+              {car.pricePerHour && (
+                <div className="rental-mode">
+                  <button
+                    type="button"
+                    className={`btn btn-sm ${rentalMode === 'DAY' ? 'btn-primary' : 'btn-ghost'}`}
+                    onClick={() => setRentalMode('DAY')}
+                  >
+                    По суткам
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn btn-sm ${rentalMode === 'HOUR' ? 'btn-primary' : 'btn-ghost'}`}
+                    onClick={() => setRentalMode('HOUR')}
+                  >
+                    По часам
+                  </button>
+                </div>
+              )}
+
+              {rentalMode === 'HOUR' ? (
+                <>
+                  <label>
+                    Дата (выдача)
+                    <input
+                      type="date"
+                      required
+                      min={today()}
+                      value={booking.startDate}
+                      onChange={(e) => setBooking({ ...booking, startDate: e.target.value })}
+                    />
+                    {startBusy && (
+                      <small className="field-warn">⚠ Этот день уже занят — выберите другую дату.</small>
+                    )}
+                  </label>
+                  <label>
+                    Количество часов
+                    <select value={hours} onChange={(e) => setHours(Number(e.target.value))}>
+                      {Array.from({ length: 24 }, (_, i) => i + 1).map((h) => (
+                        <option key={h} value={h}>
+                          {h} ч
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </>
+              ) : (
+                <>
+                  <label>
+                    Дата начала
+                    <input
+                      type="date"
+                      required
+                      min={today()}
+                      value={booking.startDate}
+                      onChange={(e) => setBooking({ ...booking, startDate: e.target.value })}
+                    />
+                    {startBusy && (
+                      <small className="field-warn">⚠ Этот день уже занят — выберите другую дату.</small>
+                    )}
+                  </label>
+                  <label>
+                    Дата окончания
+                    <input
+                      type="date"
+                      required
+                      min={booking.startDate || today()}
+                      value={booking.endDate}
+                      onChange={(e) => setBooking({ ...booking, endDate: e.target.value })}
+                    />
+                    {endBusy && (
+                      <small className="field-warn">⚠ Этот день уже занят — выберите другую дату.</small>
+                    )}
+                  </label>
+                </>
+              )}
+
+              {/* Опция «с оператором» — только если техника поддерживает. */}
+              {rentalMode === 'DAY' && car.withOperator && car.operatorPricePerDay && (
+                <label className="checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={withOperator}
+                    onChange={(e) => setWithOperator(e.target.checked)}
+                  />
+                  <span>
+                    С оператором (+{money(car.operatorPricePerDay)}/сутки)
+                  </span>
+                </label>
+              )}
 
               <div className="price-preview">
                 <div>
                   <span>Срок</span>
-                  <b>{preview.days ? `${preview.days} дн.` : '—'}</b>
+                  <b>
+                    {rentalMode === 'HOUR'
+                      ? `${hours} ч`
+                      : preview.days
+                        ? `${preview.days} дн.`
+                        : '—'}
+                  </b>
                 </div>
                 <div>
                   <span>Итого</span>
-                  <b>{preview.total ? money(preview.total) : '—'}</b>
+                  <b>
+                    {serverQuote
+                      ? money(serverQuote.totalPrice)
+                      : preview.total
+                        ? money(preview.total)
+                        : '—'}
+                  </b>
                 </div>
-                {preview.discounted && <div className="discount-tag">Скидка 10% применена 🎉</div>}
+                {serverQuote && serverQuote.discountPercent > 0 && (
+                  <div className="discount-tag">
+                    Скидка {serverQuote.discountPercent}% применена 🎉
+                  </div>
+                )}
+                {quoteLoading && <div className="muted">Считаем стоимость…</div>}
               </div>
 
-              <button className="btn btn-primary btn-block" disabled={bookingBusy}>
+              <button
+                className="btn btn-primary btn-block"
+                disabled={bookingBusy || startBusy || endBusy}
+              >
                 {bookingBusy ? 'Бронируем…' : 'Забронировать'}
               </button>
             </form>

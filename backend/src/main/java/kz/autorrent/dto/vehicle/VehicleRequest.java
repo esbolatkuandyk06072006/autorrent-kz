@@ -40,6 +40,8 @@ public record VehicleRequest(
         @NotBlank @Size(max = 50) String city,
         @Size(max = 2000) String description,
         @Size(max = 500) String imageUrl,
-        @Size(max = 12) List<@Size(max = 500) String> images
+        @Size(max = 12) List<@Size(max = 500) String> images,
+        /** Теги умных подборок: construction, wedding, mountains, city, longtrip, family. */
+        @Size(max = 10) List<@Size(max = 30) String> tags
 ) {
 }

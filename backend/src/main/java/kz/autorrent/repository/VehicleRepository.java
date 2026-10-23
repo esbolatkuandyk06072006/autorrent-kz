@@ -28,10 +28,14 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     @Query("select v from Vehicle v where v.id = :id")
     Optional<Vehicle> findByIdForUpdate(@Param("id") Long id);
 
+    /** Техника владельца (роль OWNER) — включая неактивную, для панели владельца. */
+    Page<Vehicle> findByOwnerIdOrderByCreatedAtDesc(Long ownerId, Pageable pageable);
+
     /**
      * Каталог с фильтрами. Все параметры опциональны: null — «не фильтровать».
      * type — группа (легковые/грузовые/спецтехника), category — подкатегория,
-     * maxCapacity — «до N тонн», withOperator — «только с оператором».
+     * maxCapacity — «до N тонн», withOperator — «только с оператором»,
+     * tag — тег умной подборки.
      */
     @Query("""
             select v from Vehicle v
@@ -43,6 +47,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
               and (:maxPrice is null or v.pricePerDay <= :maxPrice)
               and (:maxCapacity is null or v.capacity <= :maxCapacity)
               and (:withOperator is null or v.withOperator = :withOperator)
+              and (:tag is null or :tag member of v.tags)
             """)
     Page<Vehicle> search(@Param("status") VehicleStatus status,
                          @Param("type") VehicleType type,
@@ -52,6 +57,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
                          @Param("maxPrice") BigDecimal maxPrice,
                          @Param("maxCapacity") BigDecimal maxCapacity,
                          @Param("withOperator") Boolean withOperator,
+                         @Param("tag") String tag,
                          Pageable pageable);
 
     @Query("""
@@ -64,6 +70,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
               and (:maxPrice is null or v.pricePerDay <= :maxPrice)
               and (:maxCapacity is null or v.capacity <= :maxCapacity)
               and (:withOperator is null or v.withOperator = :withOperator)
+              and (:tag is null or :tag member of v.tags)
               and not exists (
                   select r from Reservation r
                   where r.vehicle.id = v.id
@@ -80,6 +87,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
                                   @Param("maxPrice") BigDecimal maxPrice,
                                   @Param("maxCapacity") BigDecimal maxCapacity,
                                   @Param("withOperator") Boolean withOperator,
+                                  @Param("tag") String tag,
                                   @Param("startDate") LocalDate startDate,
                                   @Param("endDate") LocalDate endDate,
                                   @Param("statuses") Collection<ReservationStatus> statuses,

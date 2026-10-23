@@ -63,9 +63,45 @@ export const CAR_STATUS_LABELS = {
 export const RESERVATION_STATUS_LABELS = {
   PENDING: 'Ожидает',
   CONFIRMED: 'Подтверждена',
+  ACTIVE: 'Активна',
   CANCELLED: 'Отменена',
   COMPLETED: 'Завершена'
 }
+
+// Подписи статусов для кнопок управления (владелец/админ меняют статус брони).
+export const RESERVATION_STATUS_COLORS = {
+  PENDING: 'var(--warning, #b7791f)',
+  CONFIRMED: 'var(--accent, #2f6f4e)',
+  ACTIVE: 'var(--accent-strong, #1f5136)',
+  CANCELLED: 'var(--muted, #8a8f98)',
+  COMPLETED: 'var(--muted, #8a8f98)'
+}
+
+// Теги умных подборок: «для стройки», «для свадьбы», «для поездки в горы»…
+export const TAG_LABELS = {
+  construction: 'Для стройки',
+  wedding: 'Для свадьбы',
+  mountains: 'Для поездки в горы',
+  city: 'Для города',
+  longtrip: 'По трассе',
+  family: 'Для семьи'
+}
+
+export const TAG_ICONS = {
+  construction: '🏗',
+  wedding: '💍',
+  mountains: '⛰',
+  city: '🏙',
+  longtrip: '🛣',
+  family: '👨‍👩‍👧'
+}
+
+// Умные подборки на главной: заголовок + тег.
+export const COLLECTIONS = [
+  { key: 'construction', title: 'Для стройки', icon: '🏗', tag: 'construction' },
+  { key: 'wedding', title: 'Для свадьбы', icon: '💍', tag: 'wedding' },
+  { key: 'mountains', title: 'Для поездки в горы', icon: '⛰', tag: 'mountains' }
+]
 
 export const REVIEW_STATUS_LABELS = {
   VISIBLE: 'Виден',
@@ -118,13 +154,41 @@ export const daysBetween = (start, end) => {
   return diff > 0 ? diff : 0
 }
 
-// Mirrors the backend pricing strategy: 10% discount from 7 rental days.
-export const previewPrice = (pricePerDay, start, end) => {
+// Mirrors the backend pricing strategy: 10% discount from 7 rental days,
+// 20% from 30 days. Operator option adds operatorPricePerDay * days.
+export const previewPrice = (pricePerDay, start, end, { withOperator = false, operatorPricePerDay } = {}) => {
   const days = daysBetween(start, end)
-  if (!days || !pricePerDay) return { days: 0, total: 0, discounted: false }
+  if (!days || !pricePerDay) return { days: 0, total: 0, discounted: false, discountPercent: 0 }
   const base = Number(pricePerDay) * days
-  const discounted = days >= 7
-  return { days, total: discounted ? Math.round(base * 0.9) : base, discounted }
+  let discountPercent = 0
+  if (days >= 30) discountPercent = 20
+  else if (days >= 7) discountPercent = 10
+  const rental = discountPercent ? Math.round(base * (1 - discountPercent / 100)) : base
+  const operator = withOperator && operatorPricePerDay
+    ? Number(operatorPricePerDay) * days
+    : 0
+  return {
+    days,
+    total: rental + operator,
+    discounted: discountPercent > 0,
+    discountPercent,
+    operatorTotal: operator
+  }
+}
+
+// Предпросмотр почасовой аренды: pricePerHour * hours.
+export const previewHourlyPrice = (pricePerHour, hours) => {
+  if (!pricePerHour || !hours) return { total: 0 }
+  return { total: Math.round(Number(pricePerHour) * Number(hours)) }
+}
+
+// Следующий доступный статус брони (для владельца/админа).
+export const NEXT_RESERVATION_STATUS = {
+  PENDING: ['CONFIRMED', 'CANCELLED'],
+  CONFIRMED: ['ACTIVE', 'COMPLETED', 'CANCELLED'],
+  ACTIVE: ['COMPLETED', 'CANCELLED'],
+  COMPLETED: [],
+  CANCELLED: []
 }
 
 // --- Фотографии техники ---

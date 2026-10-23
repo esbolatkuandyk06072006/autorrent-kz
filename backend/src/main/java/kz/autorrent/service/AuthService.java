@@ -41,7 +41,10 @@ public class AuthService {
                 .firstName(request.firstName().trim())
                 .lastName(request.lastName().trim())
                 .phone(request.phone())
-                .role(Role.USER)
+                .drivingLicense(request.drivingLicense())
+                // Регистрация доступна только для клиента или владельца техники;
+                // роль ADMIN назначается только существующим админом.
+                .role("OWNER".equalsIgnoreCase(request.role()) ? Role.OWNER : Role.USER)
                 .enabled(true)
                 .build();
         userRepository.save(user);

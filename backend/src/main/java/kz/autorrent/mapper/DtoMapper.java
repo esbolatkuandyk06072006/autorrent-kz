@@ -23,7 +23,8 @@ public final class DtoMapper {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getPhone(),
-                user.getRole().name()
+                user.getRole().name(),
+                user.getDrivingLicense() == null ? null : user.getDrivingLicense().name()
         );
     }
 
@@ -55,7 +56,11 @@ public final class DtoMapper {
                 vehicle.getImageUrl(),
                 vehicle.getImages() == null ? null : List.copyOf(vehicle.getImages()),
                 averageRating,
-                reviewCount
+                reviewCount,
+                vehicle.getTags() == null ? null : List.copyOf(vehicle.getTags()),
+                vehicle.getOwner() == null ? null : vehicle.getOwner().getId(),
+                vehicle.getOwner() == null ? null
+                        : vehicle.getOwner().getFirstName() + " " + vehicle.getOwner().getLastName()
         );
     }
 
@@ -76,7 +81,11 @@ public final class DtoMapper {
                 reservation.getTotalPrice(),
                 reservation.getStatus().name(),
                 reservation.getCancellationReason(),
-                reservation.getCreatedAt()
+                reservation.getCreatedAt(),
+                reservation.getHours(),
+                reservation.getWithOperator(),
+                reservation.getDiscountPercent(),
+                reservation.getBusinessOrder() == null ? null : reservation.getBusinessOrder().getId()
         );
     }
 

@@ -27,6 +27,7 @@ public class UserService {
         user.setFirstName(request.firstName().trim());
         user.setLastName(request.lastName().trim());
         user.setPhone(request.phone());
+        user.setDrivingLicense(request.drivingLicense());
         return DtoMapper.toUserResponse(userRepository.save(user));
     }
 

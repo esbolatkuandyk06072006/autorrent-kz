@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { NavLink, Route, Routes } from 'react-router-dom'
 import { apiGet, apiPost, apiPut, apiPatch, apiDelete, apiUpload } from '../../api.js'
 import { Alert, EmptyState, Modal, Pagination, Spinner, StatusBadge } from '../../components/ui.jsx'
+import { useAuth } from '../../AuthContext.jsx'
 import {
   CAR_STATUS_LABELS,
   CITIES,
@@ -11,6 +12,7 @@ import {
   LICENSE_LABELS,
   RESERVATION_STATUS_LABELS,
   REVIEW_STATUS_LABELS,
+  TAG_LABELS,
   TRANSMISSION_LABELS,
   VEHICLE_TYPE_LABELS,
   dateLabel,
@@ -37,24 +39,28 @@ const EMPTY_CAR = {
   city: 'Almaty',
   description: '',
   imageUrl: '',
-  images: []
+  images: [],
+  tags: []
 }
 
 export default function AdminPanel() {
+  const { isAdmin } = useAuth()
+  const title = isAdmin ? 'Панель администратора' : 'Моя техника'
   return (
     <div className="container section">
-      <h1>Панель администратора</h1>
+      <h1>{title}</h1>
       <nav className="admin-tabs">
         <NavLink to="/admin" end>
           Автомобили
         </NavLink>
         <NavLink to="/admin/reservations">Брони</NavLink>
-        <NavLink to="/admin/reviews">Отзывы</NavLink>
+        {/* Модерация отзывов — только у админа. */}
+        {isAdmin && <NavLink to="/admin/reviews">Отзывы</NavLink>}
       </nav>
       <Routes>
         <Route index element={<AdminCars />} />
         <Route path="reservations" element={<AdminReservations />} />
-        <Route path="reviews" element={<AdminReviews />} />
+        {isAdmin && <Route path="reviews" element={<AdminReviews />} />}
       </Routes>
     </div>
   )
@@ -63,6 +69,7 @@ export default function AdminPanel() {
 /* ---------------- Cars ---------------- */
 
 function AdminCars() {
+  const { isAdmin } = useAuth()
   const [data, setData] = useState(null)
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -77,13 +84,15 @@ function AdminCars() {
     setLoading(true)
     setError(null)
     try {
-      setData(await apiGet('/api/v1/vehicles', { page, size: 10, sortBy: 'id', direction: 'asc' }))
+      // Владелец видит свою технику (/mine), админ — весь каталог.
+      const path = isAdmin ? '/api/v1/vehicles' : '/api/v1/vehicles/mine'
+      setData(await apiGet(path, { page, size: 10, sortBy: 'id', direction: 'asc' }))
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
-  }, [page])
+  }, [page, isAdmin])
 
   useEffect(() => {
     load()
@@ -104,7 +113,8 @@ function AdminCars() {
       operatorPricePerDay: car.operatorPricePerDay ?? '',
       pricePerHour: car.pricePerHour ?? '',
       withOperator: !!car.withOperator,
-      images: Array.isArray(car.images) ? car.images : car.imageUrl ? [car.imageUrl] : []
+      images: Array.isArray(car.images) ? car.images : car.imageUrl ? [car.imageUrl] : [],
+      tags: Array.isArray(car.tags) ? car.tags : []
     })
     setEditing(car)
     setMessage(null)
@@ -126,7 +136,8 @@ function AdminCars() {
       pricePerHour: form.pricePerHour === '' ? null : Number(form.pricePerHour),
       withOperator: !!form.withOperator,
       images,
-      imageUrl: images[0] || null
+      imageUrl: images[0] || null,
+      tags: Array.isArray(form.tags) ? form.tags : []
     }
     try {
       let savedId = editing !== 'new' ? editing.id : null
@@ -417,6 +428,34 @@ function AdminCars() {
               <textarea rows={3} maxLength={2000} value={form.description || ''} onChange={update('description')} />
             </label>
 
+            {/* Теги умных подборок: «для стройки», «для свадьбы», «для гор»… */}
+            <div className="tags-field">
+              <span className="photos-label">Теги подборок</span>
+              <div className="tags-list">
+                {Object.entries(TAG_LABELS).map(([tag, label]) => {
+                  const checked = (form.tags || []).includes(tag)
+                  return (
+                    <label key={tag} className={`tag-chip ${checked ? 'tag-chip-on' : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() =>
+                          setForm((f) => ({
+                            ...f,
+                            tags: checked
+                              ? (f.tags || []).filter((t) => t !== tag)
+                              : [...(f.tags || []), tag]
+                          }))
+                        }
+                      />
+                      {label}
+                    </label>
+                  )
+                })}
+              </div>
+              <small className="muted">Теги помогают найти технику в умных подборках на главной.</small>
+            </div>
+
             {/* Фотографии: загрузка нескольких файлов + список ссылок с удалением. */}
             <div className="photos-field">
               <span className="photos-label">Фотографии</span>
@@ -511,14 +550,18 @@ function AdminCars() {
 
 /* ---------------- Reservations ---------------- */
 
+// Цикл статусов: PENDING → CONFIRMED → ACTIVE → COMPLETED;
+// CANCELLED доступен на активных этапах.
 const NEXT_STATUS = {
   PENDING: ['CONFIRMED', 'CANCELLED'],
-  CONFIRMED: ['COMPLETED', 'CANCELLED'],
+  CONFIRMED: ['ACTIVE', 'COMPLETED', 'CANCELLED'],
+  ACTIVE: ['COMPLETED', 'CANCELLED'],
   CANCELLED: [],
   COMPLETED: []
 }
 
 function AdminReservations() {
+  const { isAdmin } = useAuth()
   const [data, setData] = useState(null)
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -529,13 +572,17 @@ function AdminReservations() {
     setLoading(true)
     setError(null)
     try {
-      setData(await apiGet('/api/v1/reservations', { page, size: 10, sortBy: 'createdAt', direction: 'desc' }))
+      // Владелец управляет бронями по своей технике, админ — всеми.
+      const path = isAdmin
+        ? '/api/v1/reservations'
+        : '/api/v1/reservations/for-my-vehicles'
+      setData(await apiGet(path, { page, size: 10, sortBy: 'createdAt', direction: 'desc' }))
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
-  }, [page])
+  }, [page, isAdmin])
 
   useEffect(() => {
     load()
@@ -597,6 +644,7 @@ function AdminReservations() {
                           onClick={() => updateStatus(reservation, status)}
                         >
                           {status === 'CONFIRMED' && '✓ Подтвердить'}
+                          {status === 'ACTIVE' && '▶ Активировать'}
                           {status === 'COMPLETED' && '🏁 Завершить'}
                           {status === 'CANCELLED' && '✕ Отменить'}
                         </button>

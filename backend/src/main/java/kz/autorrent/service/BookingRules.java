@@ -9,13 +9,17 @@ import java.util.List;
 
 public final class BookingRules {
 
-    public static final long MAX_RENTAL_DAYS = 30;
+    /** Максимальный срок аренды: 90 дней (скидка 20% действует с 30 дней). */
+    public static final long MAX_RENTAL_DAYS = 90;
+
+    /** Статусы, при которых техника считается занятой. */
     public static final List<ReservationStatus> ACTIVE_STATUSES =
-            List.of(ReservationStatus.PENDING, ReservationStatus.CONFIRMED);
+            List.of(ReservationStatus.PENDING, ReservationStatus.CONFIRMED, ReservationStatus.ACTIVE);
 
     private BookingRules() {
     }
 
+    /** Валидация дат суточной аренды: не в прошлом, конец позже начала, лимит срока. */
     public static void validateDates(LocalDate startDate, LocalDate endDate) {
         if (startDate == null || endDate == null) {
             throw new BadRequestException("startDate and endDate are required");
@@ -29,6 +33,13 @@ public final class BookingRules {
         }
         if (startDate.isBefore(LocalDate.now())) {
             throw new BadRequestException("startDate cannot be in the past");
+        }
+    }
+
+    /** Валидация параметров почасовой аренды. */
+    public static void validateHours(Integer hours) {
+        if (hours == null || hours < 1 || hours > 24) {
+            throw new BadRequestException("hours must be between 1 and 24");
         }
     }
 

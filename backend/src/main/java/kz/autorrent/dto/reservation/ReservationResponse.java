@@ -23,6 +23,10 @@ public record ReservationResponse(
         BigDecimal totalPrice,
         String status,
         String cancellationReason,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        Integer hours,
+        Boolean withOperator,
+        BigDecimal discountPercent,
+        Long businessOrderId
 ) {
 }

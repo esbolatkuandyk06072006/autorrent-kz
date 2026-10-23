@@ -2,6 +2,7 @@ package kz.autorrent.entity;
 
 import jakarta.persistence.*;
 import kz.autorrent.entity.enums.Role;
+import kz.autorrent.entity.enums.VehicleLicense;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -38,6 +39,15 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Role role;
+
+    /**
+     * Категория водительского удостоверения клиента (B / C / E / SPECIAL).
+     * Участвует в проверке соответствия при бронировании техники.
+     * Если не указана — при бронировании техники, требующей права, будет отказано.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "driving_license", length = 20)
+    private VehicleLicense drivingLicense;
 
     @Builder.Default
     @Column(nullable = false)
