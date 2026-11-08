@@ -53,6 +53,14 @@ public class User {
     @Column(nullable = false)
     private boolean enabled = true;
 
+    /**
+     * Статус KYC-верификации: NONE (документов нет) / PENDING (документы
+     * загружены, ждут проверки) / VERIFIED (проверены).
+     */
+    @Builder.Default
+    @Column(name = "kyc_status", length = 20)
+    private String kycStatus = "NONE";
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -189,6 +189,11 @@ public class VehicleService {
                 .owner(resolveOwner(principal))
                 .status(VehicleStatus.ACTIVE)
                 .description(request.description())
+                // Шаг 7: точка выдачи (адрес, координаты, подсказка) — опционально.
+                .pickupAddress(trimToNull(request.pickupAddress()))
+                .latitude(request.latitude())
+                .longitude(request.longitude())
+                .pickupInstructions(trimToNull(request.pickupInstructions()))
                 .build();
 
         vehicle.setTags(normalizeTags(request.tags()));
@@ -226,6 +231,20 @@ public class VehicleService {
         vehicle.setPricePerDay(request.pricePerDay());
         vehicle.setCity(request.city().trim());
         vehicle.setDescription(request.description());
+        // Шаг 7: точка выдачи. Конвенция: null — не трогать существующее значение
+        // (формы админки не передают поля), пустая строка — очистить.
+        if (request.pickupAddress() != null) {
+            vehicle.setPickupAddress(trimToNull(request.pickupAddress()));
+        }
+        if (request.latitude() != null) {
+            vehicle.setLatitude(request.latitude());
+        }
+        if (request.longitude() != null) {
+            vehicle.setLongitude(request.longitude());
+        }
+        if (request.pickupInstructions() != null) {
+            vehicle.setPickupInstructions(trimToNull(request.pickupInstructions()));
+        }
 
         vehicle.setTags(normalizeTags(request.tags()));
         List<String> images = normalizeImages(request);
@@ -318,6 +337,15 @@ public class VehicleService {
 
     private String normalizePlate(String plate) {
         return plate.trim().toUpperCase(Locale.ROOT);
+    }
+
+    /** Обрезает пробелы; пустую строку превращает в null (для опциональных полей). */
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     /**

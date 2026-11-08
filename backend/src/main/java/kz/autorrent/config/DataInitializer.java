@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -85,6 +86,7 @@ public class DataInitializer implements CommandLineRunner {
 
         // Фотографии: путь /images/vehicles/{id}/N.jpg (файлы кладутся в frontend/public).
         // images[0] продублирован в imageUrl. Если файла нет — фронт покажет заглушку.
+        int seedIndex = 0;
         for (Vehicle v : vehicles) {
             List<String> photos = new ArrayList<>();
             photos.add("/images/vehicles/" + v.getId() + "/1.jpg");
@@ -102,6 +104,9 @@ public class DataInitializer implements CommandLineRunner {
                 v.setOwner(owner);
             }
             v.setTags(seedTags(v));
+            // Шаг 7: точка выдачи — адрес, координаты и подсказка (чуть отличаются
+            // внутри города, чтобы пины на общей карте не слипались).
+            applyPickup(v, seedIndex++);
         }
         vehicleRepository.saveAll(vehicles);
 
@@ -132,6 +137,8 @@ public class DataInitializer implements CommandLineRunner {
                 demoUser, tucson, confirmedStart, confirmedEnd,
                 pricingService.quote(tucson, confirmedStart, confirmedEnd, null, false));
         confirmed.setStatus(ReservationStatus.CONFIRMED);
+        // Шаг 8: код от ключа проставлен вручную (в seed статус меняется мимо сервиса).
+        confirmed.setKeyCode("4821");
         reservationRepository.save(confirmed);
 
         log.info("Demo data created ({} vehicles). ADMIN: admin@autorrent.kz / Admin123! ; USER: user@autorrent.kz / User123! ; OWNER: owner@autorrent.kz / Owner123! ; admin id={}",
@@ -405,5 +412,68 @@ public class DataInitializer implements CommandLineRunner {
             default -> tags.add("city");
         }
         return tags;
+    }
+
+    // --- Шаг 7: локатор точки выдачи (демо-данные) ---
+
+    /** Центры городов каталога (широта, долгота) — база для точек выдачи. */
+    private static final Map<String, double[]> CITY_CENTERS = Map.of(
+            "Almaty", new double[]{43.238, 76.945},
+            "Astana", new double[]{51.169, 71.449},
+            "Shymkent", new double[]{42.315, 69.587},
+            "Karaganda", new double[]{49.806, 73.085},
+            "Aktau", new double[]{43.650, 51.160}
+    );
+
+    /**
+     * Адреса точек выдачи по городам: по 3 адреса на город, чтобы у техники
+     * в одном городе были немного разные точки (и на карте, и в каталоге).
+     */
+    private static final Map<String, String[]> CITY_PICKUP_POINTS = Map.of(
+            "Almaty", new String[]{
+                    "Алматы, пр. Абая, 44 — паркинг под офисом",
+                    "Алматы, ул. Сатпаева, 90/1 — стоянка у ТРЦ",
+                    "Алматы, ул. Кабанбай батыра, 53 — въезд со двора"},
+            "Astana", new String[]{
+                    "Астана, пр. Кабанбай батыра, 62 — подземный паркинг",
+                    "Астана, ул. Сарыарка, 20 — площадка у рынка",
+                    "Астана, пр. Мәңгілік Ел, 55 — у главного входа"},
+            "Shymkent", new String[]{
+                    "Шымкент, ул. Тәуке хана, 5 — парковка у дома",
+                    "Шымкент, пр. Қазыбек би, 24 — стоянка за ТК",
+                    "Шымкент, ул. Абай, 117 — ворота №2, звонок охране"},
+            "Karaganda", new String[]{
+                    "Караганда, пр. Незабудимого, 25 — паркинг БЦ «Сити»",
+                    "Караганда, ул. Абая, 57 — площадка у рынка",
+                    "Караганда, пр. Мира, 46 — въезд с торца"},
+            "Aktau", new String[]{
+                    "Актау, пр. Мұншықтар, 19 — парковка у магазина",
+                    "Актау, ул. Сейтқалиев, 12 — стоянка во дворе",
+                    "Актау, пр. Тауголь, 46 — у шлагбаума базы"}
+    );
+
+    /** Подсказки, как забрать технику: ящик с ключом, стойка ресепшена и т.п. */
+    private static final String[] PICKUP_INSTRUCTIONS = {
+            "Ящик с ключом у входа в паркинг, код от ящика придёт в SMS.",
+            "Ключи на стойке ресепшена — назовите номер брони.",
+            "Встреча у шлагбаума: назовите номер машины, охрана откроет.",
+            "Ключ в терминале самообслуживания, PIN придет в SMS."
+    };
+
+    /**
+     * Заполняет точку выдачи демо-техники: адрес и подсказка выбираются по
+     * индексу единицы, координаты — центр города со смещением (±0.02° широты,
+     * ±0.03° долготы), чтобы пины машин одного города не слипались на карте.
+     */
+    private void applyPickup(Vehicle v, int index) {
+        double[] center = CITY_CENTERS.getOrDefault(v.getCity(), CITY_CENTERS.get("Almaty"));
+        double lat = center[0] + ((index % 7) - 3) * 0.006;
+        double lon = center[1] + ((index % 5) - 2) * 0.008;
+        v.setLatitude(Math.round(lat * 1_000_000) / 1_000_000.0);
+        v.setLongitude(Math.round(lon * 1_000_000) / 1_000_000.0);
+
+        String[] points = CITY_PICKUP_POINTS.getOrDefault(v.getCity(), CITY_PICKUP_POINTS.get("Almaty"));
+        v.setPickupAddress(points[index % points.length]);
+        v.setPickupInstructions(PICKUP_INSTRUCTIONS[index % PICKUP_INSTRUCTIONS.length]);
     }
 }

@@ -6,6 +6,7 @@ import kz.autorrent.exception.BadRequestException;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.security.SecureRandom;
 
 public final class BookingRules {
 
@@ -16,7 +17,15 @@ public final class BookingRules {
     public static final List<ReservationStatus> ACTIVE_STATUSES =
             List.of(ReservationStatus.PENDING, ReservationStatus.CONFIRMED, ReservationStatus.ACTIVE);
 
+    /** Генератор кода от ключа (шаг 8): 4 цифры, ведущие нули сохраняются. */
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     private BookingRules() {
+    }
+
+    /** Код от ключа к подтверждённой брони: ровно 4 цифры, например «0417». */
+    public static String generateKeyCode() {
+        return String.format("%04d", RANDOM.nextInt(10_000));
     }
 
     /** Валидация дат суточной аренды: не в прошлом, конец позже начала, лимит срока. */

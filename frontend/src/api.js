@@ -87,10 +87,69 @@ export async function apiDownload(path, filename) {
 
 // Multipart upload: sends FormData (files) without a JSON Content-Type header.
 // Used for uploading vehicle photos to /api/v1/vehicles/{id}/images.
-export async function apiUpload(path, files) {
+// opts.token — свой Bearer-токен (signup-токен для KYC-документов до создания аккаунта).
+export async function apiUpload(path, files, opts = {}) {
   const formData = new FormData()
   for (const file of files) formData.append('files', file)
 
+  const headers = {}
+  const token = opts.token || getToken()
+  if (token) headers.Authorization = `Bearer ${token}`
+
+  const response = await fetch(path, { method: 'POST', headers, body: formData })
+  const text = await response.text()
+  let data = null
+  try {
+    data = text ? JSON.parse(text) : null
+  } catch {
+    data = { message: text }
+  }
+
+  if (!response.ok) {
+    if (!opts.token && response.status === 401) setToken(null)
+    const error = new Error(data?.message || `Ошибка HTTP ${response.status}`)
+    error.status = response.status
+    error.fieldErrors = data?.fieldErrors || null
+    throw error
+  }
+  return data
+}
+
+// Multipart upload with a single file + text fields (KYC: slot + file),
+// свой Authorization-токен и произвольные поля формы.
+// opts.method — 'GET' для чтения списка (без тела), по умолчанию POST.
+export async function apiUploadSingle(path, formData, opts = {}) {
+  const headers = {}
+  const token = opts.token || getToken()
+  if (token) headers.Authorization = `Bearer ${token}`
+  const method = opts.method || 'POST'
+
+  const response = await fetch(path, {
+    method,
+    headers,
+    body: method === 'POST' ? formData : undefined
+  })
+  const text = await response.text()
+  let data = null
+  try {
+    data = text ? JSON.parse(text) : null
+  } catch {
+    data = { message: text }
+  }
+
+  if (!response.ok) {
+    if (!opts.token && response.status === 401) setToken(null)
+    const error = new Error(data?.message || `Ошибка HTTP ${response.status}`)
+    error.status = response.status
+    error.fieldErrors = data?.fieldErrors || null
+    throw error
+  }
+  return data
+}
+
+// Multipart upload with extra text fields (шаг 8: акт приёма-передачи —
+// поля формы + несколько фото в одном запросе). FormData собирается на месте вызова.
+export async function apiUploadForm(path, formData) {
   const headers = {}
   const token = getToken()
   if (token) headers.Authorization = `Bearer ${token}`

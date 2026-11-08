@@ -56,10 +56,12 @@ export function AuthProvider({ children }) {
       token: getToken(),
       login,
       register,
+      // Примит готовый ответ авторизации (SMS-вход по телефону).
+      applyAuth,
       logout,
       refreshUser
     }),
-    [user, login, register, logout, refreshUser]
+    [user, login, register, applyAuth, logout, refreshUser]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

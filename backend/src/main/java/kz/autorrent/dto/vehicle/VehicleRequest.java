@@ -42,6 +42,11 @@ public record VehicleRequest(
         @Size(max = 500) String imageUrl,
         @Size(max = 12) List<@Size(max = 500) String> images,
         /** Теги умных подборок: construction, wedding, mountains, city, longtrip, family. */
-        @Size(max = 10) List<@Size(max = 30) String> tags
+        @Size(max = 10) List<@Size(max = 30) String> tags,
+        // --- Шаг 7: локатор точки выдачи (все поля опциональны) ---
+        @Size(max = 200) String pickupAddress,
+        @DecimalMin(value = "-90.0") @DecimalMax(value = "90.0") Double latitude,
+        @DecimalMin(value = "-180.0") @DecimalMax(value = "180.0") Double longitude,
+        @Size(max = 300) String pickupInstructions
 ) {
 }

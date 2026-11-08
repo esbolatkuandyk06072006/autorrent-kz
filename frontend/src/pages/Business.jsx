@@ -4,6 +4,7 @@ import { apiGet, apiPost, apiDownload } from '../api.js'
 import { useAuth } from '../AuthContext.jsx'
 import { Alert, Spinner } from '../components/ui.jsx'
 import { useTranslation } from '../i18n.jsx'
+import { IconDoc } from '../components/icons.jsx'
 import { money, dateLabel, today, addDays } from '../utils.js'
 
 /**
@@ -311,7 +312,7 @@ export default function Business() {
                   </div>
                   <div className="order-actions">
                     <button className="btn btn-primary btn-sm" onClick={() => downloadInvoice(order.id)}>
-                      📄 {t('business.invoice')}
+                      <IconDoc size={15} /> {t('business.invoice')}
                     </button>
                     <Link className="btn btn-ghost btn-sm" to="/my-reservations">
                       {t('nav.myReservations')}

@@ -5,6 +5,7 @@ import CarImage from '../components/CarImage.jsx'
 import { EmptyState, Spinner } from '../components/ui.jsx'
 import { useLibrary } from '../LibraryContext.jsx'
 import { useTranslation } from '../i18n.jsx'
+import { IconClose, IconCompare } from '../components/icons.jsx'
 import {
   CAR_STATUS_LABELS,
   CATEGORY_LABELS,
@@ -34,7 +35,7 @@ const ROWS = [
   { label: 'Номер', render: (c) => c.licensePlate },
   {
     label: 'Рейтинг',
-    render: (c) => (c.averageRating != null ? `⭐ ${Number(c.averageRating).toFixed(1)} (${c.reviewCount})` : '—'),
+    render: (c) => (c.averageRating != null ? `${Number(c.averageRating).toFixed(1)} (${c.reviewCount})` : '—'),
     better: 'max',
     value: (c) => (c.averageRating != null ? Number(c.averageRating) : null)
   },
@@ -94,7 +95,9 @@ export default function Compare() {
     <div className="container section">
       <div className="page-head">
         <div>
-          <h1>⇄ {t('compare.title')}</h1>
+          <h1>
+            <IconCompare size={26} /> {t('compare.title')}
+          </h1>
           <p className="muted">{t('compare.subtitle')}</p>
         </div>
         {cars.length > 0 && (
@@ -108,7 +111,7 @@ export default function Compare() {
 
       {!loading && cars.length === 0 && (
         <EmptyState
-          icon="⚖️"
+          icon={<IconCompare size={44} />}
           title={t('compare.empty')}
           hint={t('compare.emptyText')}
           action={
@@ -133,7 +136,7 @@ export default function Compare() {
                         {car.brand} {car.model}
                       </b>
                       <button className="btn btn-ghost btn-sm" onClick={() => toggleCompare(car.id)}>
-                        ✕ Убрать
+                        <IconClose size={14} /> Убрать
                       </button>
                     </div>
                   </th>

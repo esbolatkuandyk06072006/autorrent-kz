@@ -30,5 +30,10 @@ public class WebConfig implements WebMvcConfigurer {
         String uploadLocation = Path.of(uploadDir, "vehicles").toUri().toString();
         registry.addResourceHandler("/images/vehicles/**")
                 .addResourceLocations(uploadLocation, "classpath:/static/images/vehicles/");
+
+        // Шаг 8: фото актов приёма-передачи — только каталог загрузок (classPath-фото нет).
+        String handoverLocation = Path.of(uploadDir, "handover").toUri().toString();
+        registry.addResourceHandler("/images/handover/**")
+                .addResourceLocations(handoverLocation);
     }
 }

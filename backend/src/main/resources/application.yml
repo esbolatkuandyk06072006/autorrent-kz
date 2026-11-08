@@ -50,6 +50,10 @@ app:
     enabled: ${APP_SEED_ENABLED:true}
   upload:
     dir: ${APP_UPLOAD_DIR:uploads}
+  sms:
+    # Dev-режим: код SMS возвращается в ответе в devCode (для демо и защиты
+    # от блокировок на шлюзе). В проде выключить: APP_SMS_DEV_MODE=false.
+    dev-mode: ${APP_SMS_DEV_MODE:true}
 
 springdoc:
   swagger-ui:

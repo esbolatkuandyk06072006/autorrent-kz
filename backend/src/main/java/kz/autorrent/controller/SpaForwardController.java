@@ -17,6 +17,8 @@ public class SpaForwardController {
             "/cars/{id:\\d+}",
             "/login",
             "/register",
+            "/welcome",
+            "/kyc",
             "/favorites",
             "/compare",
             "/assistant",

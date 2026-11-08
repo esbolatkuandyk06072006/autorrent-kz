@@ -99,6 +99,26 @@ public class Vehicle {
     @Column(nullable = false, length = 50)
     private String city;
 
+    // --- Шаг 7: локатор точки выдачи ---
+    // Адрес, координаты и подсказка, как забрать технику. По координатам
+    // фронт строит карту (Leaflet) и ссылку на маршрут в Google Maps.
+
+    /** Адрес точки выдачи одной строкой: «Алматы, ул. Абая, 44 — паркинг». */
+    @Column(name = "pickup_address", length = 200)
+    private String pickupAddress;
+
+    /** Широта точки выдачи (51.169 и т.п.). */
+    @Column
+    private Double latitude;
+
+    /** Долгота точки выдачи (71.449 и т.п.). */
+    @Column
+    private Double longitude;
+
+    /** Подсказка клиенту: «Ящик с ключом у входа в паркинг». */
+    @Column(name = "pickup_instructions", length = 300)
+    private String pickupInstructions;
+
     /**
      * Владелец/арендодатель (роль OWNER). Техника без владельца принадлежит
      * платформе (её управляет админ). Владелец добавляет свою технику и

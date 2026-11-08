@@ -1,4 +1,4 @@
-import { CATEGORY_ICONS } from '../utils.js'
+import { CATEGORY_LABELS } from '../utils.js'
 
 /**
  * Deterministic color from brand+model so every car gets its own paint.
@@ -222,7 +222,7 @@ export default function CarArt({ car, big = false }) {
       <g transform="translate(16 16)">
         <rect width="118" height="26" rx="13" fill="#ffffff" opacity="0.85" />
         <text x="59" y="17" textAnchor="middle" fontSize="13" fontWeight="700" fill={scene.accent}>
-          {CATEGORY_ICONS[car.category] || '🚗'} {car.brand}
+          {CATEGORY_LABELS[car.category] || car.category} · {car.brand}
         </text>
       </g>
     </svg>

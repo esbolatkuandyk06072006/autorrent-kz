@@ -5,6 +5,7 @@ import CarCard from '../components/CarCard.jsx'
 import { EmptyState, Spinner } from '../components/ui.jsx'
 import { useLibrary } from '../LibraryContext.jsx'
 import { useTranslation } from '../i18n.jsx'
+import { IconHeart } from '../components/icons.jsx'
 
 export default function Favorites() {
   const { favorites, toggleFavorite } = useLibrary()
@@ -32,14 +33,16 @@ export default function Favorites() {
 
   return (
     <div className="container section">
-      <h1>❤️ {t('favorites.title')}</h1>
+      <h1>
+        <IconHeart size={26} /> {t('favorites.title')}
+      </h1>
       <p className="muted">Машины, которые вы сохранили. Список хранится в браузере — работает даже без входа.</p>
 
       {loading && <Spinner label={t('common.loading')} />}
 
       {!loading && cars.length === 0 && (
         <EmptyState
-          icon="💛"
+          icon={<IconHeart size={44} filled />}
           title={t('favorites.empty')}
           hint={t('favorites.emptyText')}
           action={

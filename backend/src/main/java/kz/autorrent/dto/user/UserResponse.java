@@ -10,6 +10,7 @@ public record UserResponse(
         String lastName,
         String phone,
         String role,
-        String drivingLicense
+        String drivingLicense,
+        String kycStatus
 ) {
 }

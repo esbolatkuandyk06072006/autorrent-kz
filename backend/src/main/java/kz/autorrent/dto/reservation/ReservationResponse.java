@@ -27,6 +27,14 @@ public record ReservationResponse(
         Integer hours,
         Boolean withOperator,
         BigDecimal discountPercent,
-        Long businessOrderId
+        Long businessOrderId,
+        // --- Шаг 8: код от ключа и точка выдачи ---
+        // keyCode и pickupInstructions отдаются только клиенту, оформившему
+        // бронь (DtoMapper получает флаг); адрес и координаты публичны.
+        String keyCode,
+        String pickupAddress,
+        Double latitude,
+        Double longitude,
+        String pickupInstructions
 ) {
 }

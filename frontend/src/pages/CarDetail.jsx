@@ -1,16 +1,33 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { apiGet, apiPost, apiPut, apiDelete } from '../api.js'
 import { useAuth } from '../AuthContext.jsx'
 import CarImage from '../components/CarImage.jsx'
+import VehicleMap, { googleRoute } from '../components/VehicleMap.jsx'
 import { Alert, Spinner, StatusBadge } from '../components/ui.jsx'
+import {
+  IconCamera,
+  IconCheck,
+  IconConstruction,
+  IconHome,
+  IconKey,
+  IconLicense,
+  IconMountains,
+  IconOperator,
+  IconPin,
+  IconRoutes,
+  IconShield,
+  IconStar,
+  IconUsers,
+  IconWedding,
+  IconWeight
+} from '../components/icons.jsx'
 import {
   CAR_STATUS_LABELS,
   CATEGORY_LABELS,
   FUEL_LABELS,
   LICENSE_LABELS,
   REVIEW_STATUS_LABELS,
-  TAG_ICONS,
   TAG_LABELS,
   TRANSMISSION_LABELS,
   VEHICLE_TYPE_LABELS,
@@ -21,6 +38,27 @@ import {
   previewPrice,
   today
 } from '../utils.js'
+
+// Иконки тегов умных подборок — SVG вместо эмодзи.
+const TAG_ICONS = {
+  construction: IconConstruction,
+  wedding: IconWedding,
+  mountains: IconMountains,
+  city: IconHome,
+  longtrip: IconRoutes,
+  family: IconUsers
+}
+
+// Ряд звёзд для рейтинга отзыва: n заполненных IconStar.
+function Stars({ value = 0, size = 14 }) {
+  return (
+    <>
+      {Array.from({ length: Math.max(0, Math.min(5, value)) }, (_, i) => (
+        <IconStar key={i} size={size} />
+      ))}
+    </>
+  )
+}
 
 export default function CarDetail() {
   const { id } = useParams()
@@ -201,6 +239,15 @@ export default function CarDetail() {
   const canEditReview = (review) =>
     isAuth && (isAdmin || (user && review.userId === user.id))
 
+  // Точка выдачи: координаты корректные числа — показываем карту и маршрут.
+  const pickupPoint = useMemo(() => {
+    if (!car || car.latitude == null || car.longitude == null) return null
+    const lat = Number(car.latitude)
+    const lng = Number(car.longitude)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+    return { id: car.id, lat, lng, title: `${car.brand} ${car.model}`, address: car.pickupAddress }
+  }, [car])
+
   return (
     <div className="container section">
       <div className="detail-grid">
@@ -215,41 +262,88 @@ export default function CarDetail() {
             <span className="badge badge-soft">{TRANSMISSION_LABELS[car.transmission]}</span>
             <span className="badge badge-soft">{FUEL_LABELS[car.fuelType]}</span>
             {car.type === 'PASSENGER' ? (
-              <span className="badge badge-soft">👥 {car.seats} мест</span>
+              <span className="badge badge-soft">
+                <IconUsers size={14} /> {car.seats} мест
+              </span>
             ) : (
-              car.capacity != null && <span className="badge badge-soft">⚖ {car.capacity} т</span>
+              car.capacity != null && (
+                <span className="badge badge-soft">
+                  <IconWeight size={14} /> {car.capacity} т
+                </span>
+              )
             )}
             {car.requiredLicense && (
-              <span className="badge badge-soft">🪪 {LICENSE_LABELS[car.requiredLicense] || car.requiredLicense}</span>
+              <span className="badge badge-soft">
+                <IconLicense size={14} /> {LICENSE_LABELS[car.requiredLicense] || car.requiredLicense}
+              </span>
             )}
-            {car.withOperator && <span className="badge badge-soft">👷 с оператором</span>}
-            <span className="badge badge-soft">📍 {car.city}</span>
+            {car.withOperator && (
+              <span className="badge badge-soft">
+                <IconOperator size={14} /> с оператором
+              </span>
+            )}
+            <span className="badge badge-soft">
+              <IconPin size={14} /> {car.city}
+            </span>
             <StatusBadge value={car.status} labels={CAR_STATUS_LABELS} />
           </div>
 
           {/* Теги умных подборок: «для стройки», «для свадьбы», «для гор». */}
           {Array.isArray(car.tags) && car.tags.length > 0 && (
             <div className="detail-tags">
-              {car.tags.map((tag) => (
-                <span key={tag} className="badge badge-tag">
-                  {TAG_ICONS[tag] || '•'} {TAG_LABELS[tag] || tag}
-                </span>
-              ))}
+              {car.tags.map((tag) => {
+                const TagIcon = TAG_ICONS[tag] || IconPin
+                return (
+                  <span key={tag} className="badge badge-tag">
+                    <TagIcon size={14} /> {TAG_LABELS[tag] || tag}
+                  </span>
+                )
+              })}
             </div>
           )}
 
           {/* Подсказка про права: если у машины категория, а у клиента её нет. */}
           {isAuth && !isAdmin && car.requiredLicense && user?.drivingLicense !== car.requiredLicense && (
             <p className="field-warn">
-              ⚠ Для аренды нужны права категории {LICENSE_LABELS[car.requiredLicense] || car.requiredLicense}.
+              <IconShield size={15} /> Для аренды нужны права категории {LICENSE_LABELS[car.requiredLicense] || car.requiredLicense}.
               Укажите категорию в <a href="/profile">профиле</a>.
             </p>
           )}
           {car.description && <p className="detail-desc">{car.description}</p>}
           {car.averageRating != null && (
             <p className="detail-rating">
-              ⭐ {Number(car.averageRating).toFixed(1)} · отзывов: {car.reviewCount}
+              <IconStar size={16} /> {Number(car.averageRating).toFixed(1)} · отзывов: {car.reviewCount}
             </p>
+          )}
+
+          {/* Шаг 7: точка выдачи — адрес, подсказка и карта с маршрутом. */}
+          {(car.pickupAddress || pickupPoint) && (
+            <section className="pickup-block">
+              <h3>Точка выдачи</h3>
+              {car.pickupAddress && (
+                <p className="pickup-address">
+                  <IconPin size={15} /> {car.pickupAddress}
+                </p>
+              )}
+              {car.pickupInstructions && (
+                <p className="pickup-hint">
+                  <IconKey size={15} /> {car.pickupInstructions}
+                </p>
+              )}
+              {pickupPoint && (
+                <>
+                  <VehicleMap points={[pickupPoint]} route height={280} />
+                  <a
+                    className="btn btn-primary btn-sm"
+                    href={googleRoute(car.latitude, car.longitude)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <IconRoutes size={15} /> Построить маршрут
+                  </a>
+                </>
+              )}
+            </section>
           )}
         </div>
 
@@ -303,7 +397,9 @@ export default function CarDetail() {
                       onChange={(e) => setBooking({ ...booking, startDate: e.target.value })}
                     />
                     {startBusy && (
-                      <small className="field-warn">⚠ Этот день уже занят — выберите другую дату.</small>
+                      <small className="field-warn">
+                        <IconShield size={13} /> Этот день уже занят — выберите другую дату.
+                      </small>
                     )}
                   </label>
                   <label>
@@ -329,7 +425,9 @@ export default function CarDetail() {
                       onChange={(e) => setBooking({ ...booking, startDate: e.target.value })}
                     />
                     {startBusy && (
-                      <small className="field-warn">⚠ Этот день уже занят — выберите другую дату.</small>
+                      <small className="field-warn">
+                        <IconShield size={13} /> Этот день уже занят — выберите другую дату.
+                      </small>
                     )}
                   </label>
                   <label>
@@ -342,7 +440,9 @@ export default function CarDetail() {
                       onChange={(e) => setBooking({ ...booking, endDate: e.target.value })}
                     />
                     {endBusy && (
-                      <small className="field-warn">⚠ Этот день уже занят — выберите другую дату.</small>
+                      <small className="field-warn">
+                        <IconShield size={13} /> Этот день уже занят — выберите другую дату.
+                      </small>
                     )}
                   </label>
                 </>
@@ -385,7 +485,7 @@ export default function CarDetail() {
                 </div>
                 {serverQuote && serverQuote.discountPercent > 0 && (
                   <div className="discount-tag">
-                    Скидка {serverQuote.discountPercent}% применена 🎉
+                    <IconCheck size={15} /> Скидка {serverQuote.discountPercent}% применена
                   </div>
                 )}
                 {quoteLoading && <div className="muted">Считаем стоимость…</div>}
@@ -418,7 +518,9 @@ export default function CarDetail() {
                 <b>
                   {review.userFirstName} {review.userLastName}
                 </b>
-                <span className="review-rating">{'⭐'.repeat(review.rating)}</span>
+                <span className="review-rating">
+                  <Stars value={review.rating} />
+                </span>
                 <span className="muted">{dateLabel(review.createdAt)}</span>
                 {review.status === 'HIDDEN' && <StatusBadge value="HIDDEN" labels={REVIEW_STATUS_LABELS} />}
               </div>
@@ -470,7 +572,7 @@ export default function CarDetail() {
               >
                 {[5, 4, 3, 2, 1].map((value) => (
                   <option key={value} value={value}>
-                    {'⭐'.repeat(value)} — {value}
+                    {value} из 5
                   </option>
                 ))}
               </select>
@@ -574,7 +676,9 @@ function GalleryThumb({ src, active, onSelect }) {
       aria-label="Фото"
     >
       {broken ? (
-        <span className="gallery-thumb-fallback">🖼</span>
+        <span className="gallery-thumb-fallback">
+          <IconCamera size={20} />
+        </span>
       ) : (
         <img src={src} alt="" loading="lazy" decoding="async" onError={() => setBroken(true)} />
       )}

@@ -62,7 +62,7 @@ public class AuthService {
         return buildAuthResponse(user);
     }
 
-    private AuthResponse buildAuthResponse(User user) {
+    public AuthResponse buildAuthResponse(User user) {
         return new AuthResponse(
                 jwtService.generateToken(user),
                 "Bearer",

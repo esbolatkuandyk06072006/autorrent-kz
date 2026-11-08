@@ -5,12 +5,6 @@ export const VEHICLE_TYPE_LABELS = {
   SPECIAL: 'Спецтехника'
 }
 
-export const VEHICLE_TYPE_ICONS = {
-  PASSENGER: '🚗',
-  CARGO: '🚚',
-  SPECIAL: '🏗'
-}
-
 // Подкатегории, сгруппированные по группе техники.
 export const CATEGORY_GROUPS = {
   PASSENGER: ['ECONOMY', 'COMFORT', 'BUSINESS', 'SUV', 'ELECTRIC'],
@@ -88,41 +82,24 @@ export const TAG_LABELS = {
 }
 
 export const TAG_ICONS = {
-  construction: '🏗',
-  wedding: '💍',
-  mountains: '⛰',
-  city: '🏙',
-  longtrip: '🛣',
-  family: '👨‍👩‍👧'
+  construction: 'construction',
+  wedding: 'wedding',
+  mountains: 'mountains',
+  city: 'city',
+  longtrip: 'longtrip',
+  family: 'family'
 }
 
 // Умные подборки на главной: заголовок + тег.
 export const COLLECTIONS = [
-  { key: 'construction', title: 'Для стройки', icon: '🏗', tag: 'construction' },
-  { key: 'wedding', title: 'Для свадьбы', icon: '💍', tag: 'wedding' },
-  { key: 'mountains', title: 'Для поездки в горы', icon: '⛰', tag: 'mountains' }
+  { key: 'construction', title: 'Для стройки', tag: 'construction' },
+  { key: 'wedding', title: 'Для свадьбы', tag: 'wedding' },
+  { key: 'mountains', title: 'Для поездки в горы', tag: 'mountains' }
 ]
 
 export const REVIEW_STATUS_LABELS = {
   VISIBLE: 'Виден',
   HIDDEN: 'Скрыт'
-}
-
-export const CATEGORY_ICONS = {
-  ECONOMY: '🚗',
-  COMFORT: '🚙',
-  SUV: '🚜',
-  BUSINESS: '🚘',
-  ELECTRIC: '⚡',
-  LIGHT_TRUCK: '🚐',
-  MEDIUM_TRUCK: '🚚',
-  HEAVY_TRUCK: '🚛',
-  DUMP_TRUCK: '⛏',
-  EXCAVATOR: '🏗',
-  CRANE: '🏗',
-  BULLDOZER: '🚜',
-  LOADER: '🚜',
-  CONCRETE_MIXER: '🚚'
 }
 
 export const CITIES = ['Almaty', 'Astana', 'Shymkent', 'Karaganda', 'Aktau']

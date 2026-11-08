@@ -81,6 +81,13 @@ public class Reservation {
     @Column(nullable = false, length = 20)
     private ReservationStatus status = ReservationStatus.PENDING;
 
+    /**
+     * Шаг 8: код от ключа — 4 цифры, генерируется при подтверждении брони.
+     * В API отдаётся только клиенту, оформившему бронь (см. DtoMapper).
+     */
+    @Column(name = "key_code", length = 4)
+    private String keyCode;
+
     @Column(name = "cancellation_reason", length = 255)
     private String cancellationReason;
 

@@ -4,6 +4,18 @@ import { apiGet, apiPost, apiPut, apiPatch, apiDelete, apiUpload } from '../../a
 import { Alert, EmptyState, Modal, Pagination, Spinner, StatusBadge } from '../../components/ui.jsx'
 import { useAuth } from '../../AuthContext.jsx'
 import {
+  IconCalendar,
+  IconCatalog,
+  IconCheck,
+  IconClose,
+  IconDoc,
+  IconEye,
+  IconPencil,
+  IconRestore,
+  IconStar,
+  IconTrash
+} from '../../components/icons.jsx'
+import {
   CAR_STATUS_LABELS,
   CITIES,
   CATEGORY_GROUPS,
@@ -236,7 +248,9 @@ function AdminCars() {
       <Alert>{error}</Alert>
       {loading && <Spinner label="Загружаем автопарк…" />}
 
-      {!loading && data && data.content.length === 0 && <EmptyState icon="🚗" title="Автомобилей нет" />}
+      {!loading && data && data.content.length === 0 && (
+        <EmptyState icon={<IconCatalog size={44} />} title="Автомобилей нет" />
+      )}
 
       {!loading && data && data.content.length > 0 && (
         <>
@@ -267,8 +281,8 @@ function AdminCars() {
                       <StatusBadge value={car.status} labels={CAR_STATUS_LABELS} />
                     </td>
                     <td className="table-actions">
-                      <button className="btn btn-ghost btn-sm" onClick={() => openEdit(car)}>
-                        ✏️
+                      <button className="btn btn-ghost btn-sm" onClick={() => openEdit(car)} title="Редактировать">
+                        <IconPencil size={15} />
                       </button>
                       {car.status !== 'ACTIVE' && (
                         <button className="btn btn-ghost btn-sm" onClick={() => changeStatus(car, 'ACTIVE')}>
@@ -280,8 +294,8 @@ function AdminCars() {
                           На ТО
                         </button>
                       )}
-                      <button className="btn btn-danger btn-sm" onClick={() => remove(car)}>
-                        🗑
+                      <button className="btn btn-danger btn-sm" onClick={() => remove(car)} title="Удалить">
+                        <IconTrash size={15} />
                       </button>
                     </td>
                   </tr>
@@ -475,7 +489,7 @@ function AdminCars() {
                         setForm((f) => ({ ...f, images: f.images.filter((_, idx) => idx !== i) }))
                       }
                     >
-                      ✕
+                      <IconClose size={15} />
                     </button>
                     {i === 0 && pendingFiles.length === 0 && <span className="photo-main-tag">главное</span>}
                   </div>
@@ -490,7 +504,7 @@ function AdminCars() {
                       title="Убрать файл"
                       onClick={() => setPendingFiles((prev) => prev.filter((_, idx) => idx !== i))}
                     >
-                      ✕
+                      <IconClose size={15} />
                     </button>
                     <span className="photo-new-tag">новое</span>
                   </div>
@@ -604,7 +618,9 @@ function AdminReservations() {
       <Alert>{error}</Alert>
       {loading && <Spinner label="Загружаем брони…" />}
 
-      {!loading && data && data.content.length === 0 && <EmptyState icon="🗓" title="Броней нет" />}
+      {!loading && data && data.content.length === 0 && (
+        <EmptyState icon={<IconCalendar size={44} />} title="Броней нет" />
+      )}
 
       {!loading && data && data.content.length > 0 && (
         <>
@@ -643,10 +659,26 @@ function AdminReservations() {
                           className={`btn btn-sm ${status === 'CANCELLED' ? 'btn-danger' : 'btn-primary'}`}
                           onClick={() => updateStatus(reservation, status)}
                         >
-                          {status === 'CONFIRMED' && '✓ Подтвердить'}
-                          {status === 'ACTIVE' && '▶ Активировать'}
-                          {status === 'COMPLETED' && '🏁 Завершить'}
-                          {status === 'CANCELLED' && '✕ Отменить'}
+                          {status === 'CONFIRMED' && (
+                            <>
+                              <IconCheck size={14} /> Подтвердить
+                            </>
+                          )}
+                          {status === 'ACTIVE' && (
+                            <>
+                              <IconCheck size={14} /> Активировать
+                            </>
+                          )}
+                          {status === 'COMPLETED' && (
+                            <>
+                              <IconRestore size={14} /> Завершить
+                            </>
+                          )}
+                          {status === 'CANCELLED' && (
+                            <>
+                              <IconClose size={14} /> Отменить
+                            </>
+                          )}
                         </button>
                       ))}
                     </td>
@@ -714,7 +746,9 @@ function AdminReviews() {
       <Alert>{error}</Alert>
       {loading && <Spinner label="Загружаем отзывы…" />}
 
-      {!loading && data && data.content.length === 0 && <EmptyState icon="💬" title="Отзывов нет" />}
+      {!loading && data && data.content.length === 0 && (
+        <EmptyState icon={<IconDoc size={44} />} title="Отзывов нет" />
+      )}
 
       {!loading && data && data.content.length > 0 && (
         <>
@@ -725,7 +759,11 @@ function AdminReviews() {
                   <b>
                     {review.userFirstName} {review.userLastName}
                   </b>
-                  <span className="review-rating">{'⭐'.repeat(review.rating)}</span>
+                  <span className="review-rating">
+                    {Array.from({ length: Math.max(0, Math.min(5, review.rating)) }, (_, i) => (
+                      <IconStar key={i} size={14} />
+                    ))}
+                  </span>
                   <span className="muted">
                     {review.carBrand} {review.carModel} · бронь #{review.reservationId} · {dateLabel(review.createdAt)}
                   </span>
@@ -735,15 +773,15 @@ function AdminReviews() {
                 <div className="review-actions">
                   {review.status === 'VISIBLE' ? (
                     <button className="btn btn-ghost btn-sm" onClick={() => setStatus(review, 'HIDDEN')}>
-                      👁 Скрыть
+                      <IconEye size={14} /> Скрыть
                     </button>
                   ) : (
                     <button className="btn btn-ghost btn-sm" onClick={() => setStatus(review, 'VISIBLE')}>
-                      👁 Показать
+                      <IconEye size={14} /> Показать
                     </button>
                   )}
                   <button className="btn btn-danger btn-sm" onClick={() => remove(review)}>
-                    🗑 Удалить
+                    <IconTrash size={14} /> Удалить
                   </button>
                 </div>
               </article>

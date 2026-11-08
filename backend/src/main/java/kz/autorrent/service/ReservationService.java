@@ -47,9 +47,10 @@ public class ReservationService {
     public PageResponse<ReservationResponse> getMy(String email, Pageable pageable) {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
+        // Список своих броней — клиент видит код от ключа и инструкцию выдачи.
         return PageResponse.from(reservationRepository
                 .findByUserIdWithDetails(user.getId(), pageable)
-                .map(DtoMapper::toReservationResponse));
+                .map(reservation -> DtoMapper.toReservationResponse(reservation, true)));
     }
 
     @Transactional(readOnly = true)
@@ -73,7 +74,10 @@ public class ReservationService {
     public ReservationResponse getById(Long id, CustomUserDetails principal) {
         Reservation reservation = find(id);
         checkAccess(reservation, principal);
-        return DtoMapper.toReservationResponse(reservation);
+        // Код от ключа и инструкция — только если смотрит сам клиент-владелец брони.
+        boolean owner = principal != null
+                && reservation.getUser().getId().equals(principal.getId());
+        return DtoMapper.toReservationResponse(reservation, owner);
     }
 
     @Transactional
@@ -97,7 +101,9 @@ public class ReservationService {
                 ? defaultReason
                 : BookingRules.normalizeCancellationReason(reason));
 
-        return DtoMapper.toReservationResponse(reservationRepository.save(reservation));
+        // Отмена своей брони клиентом — в ответе виден код (если был).
+        boolean owner = reservation.getUser().getId().equals(principal.getId());
+        return DtoMapper.toReservationResponse(reservationRepository.save(reservation), owner);
     }
 
     @Transactional
@@ -177,6 +183,11 @@ public class ReservationService {
         }
 
         reservation.setStatus(newStatus);
+        // Шаг 8: при подтверждении брони выдаём клиенту код от ключа (4 цифры).
+        if (newStatus == ReservationStatus.CONFIRMED && reservation.getKeyCode() == null) {
+            reservation.setKeyCode(BookingRules.generateKeyCode());
+        }
+        // Ответ для админа/владельца техники — без кода от ключа клиента.
         return DtoMapper.toReservationResponse(reservationRepository.save(reservation));
     }
 

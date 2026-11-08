@@ -2,8 +2,10 @@ package kz.autorrent.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.security.Keys;
 import kz.autorrent.entity.User;
+import kz.autorrent.exception.BadRequestException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -53,6 +55,43 @@ public class JwtService {
 
     public long getExpirationSeconds() {
         return expirationSeconds;
+    }
+
+    /**
+     * Токен регистрации (signup): subject — телефон, claim purpose="signup",
+     * срок жизни 30 минут. Выдаётся после проверки SMS-кода новому пользователю.
+     */
+    public String generateSignupToken(String phone) {
+        Date now = new Date();
+        Date expiresAt = new Date(now.getTime() + 30 * 60 * 1000);
+        return Jwts.builder()
+                .subject(phone)
+                .claim("purpose", "signup")
+                .issuedAt(now)
+                .expiration(expiresAt)
+                .signWith(key)
+                .compact();
+    }
+
+    /**
+     * Телефон из токена регистрации. Не-signup-токен, просроченный или
+     * невалидный — BadRequestException «Недействительный токен регистрации».
+     */
+    public String extractSignupPhone(String token) {
+        Claims claims;
+        try {
+            claims = extractAllClaims(token);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new BadRequestException("Недействительный токен регистрации");
+        }
+        if (!"signup".equals(claims.get("purpose"))) {
+            throw new BadRequestException("Недействительный токен регистрации");
+        }
+        Date expiration = claims.getExpiration();
+        if (expiration == null || !expiration.after(new Date())) {
+            throw new BadRequestException("Недействительный токен регистрации");
+        }
+        return claims.getSubject();
     }
 
     private Claims extractAllClaims(String token) {

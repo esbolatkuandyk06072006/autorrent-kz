@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, apiGet } from '../api.js'
 import CarImage from '../components/CarImage.jsx'
+import { IconAssistant, IconRestore } from '../components/icons.jsx'
 import { money } from '../utils.js'
 
 // Initial greeting. NOTE: the key must be `text` (not `reply`) because the
@@ -9,7 +10,7 @@ import { money } from '../utils.js'
 // while rendering called `text.split(...)` — crashed React into a white screen.
 const GREETING = {
   role: 'bot',
-  text: 'Сәлем! Я AI-консультант AutoRent KZ 🤖 Могу подобрать технику под бюджет, город и класс, объяснить скидки, документы и оплату.\nСпросите что-нибудь — или выберите вопрос ниже.',
+  text: 'Сәлем! Я AI-консультант AutoRent KZ. Могу подобрать технику под бюджет, город и класс, объяснить скидки, документы и оплату.\nСпросите что-нибудь — или выберите вопрос ниже.',
   suggestions: [
     'Подбери машину до 25000 тенге в Алматы',
     'Внедорожник в Астане',
@@ -116,7 +117,9 @@ function BotMessage({ text }) {
   const lines = String(text ?? '').split('\n')
   return (
     <div className="msg msg-bot">
-      <span className="msg-avatar">🤖</span>
+      <span className="msg-avatar">
+        <IconAssistant size={18} />
+      </span>
       <div className="msg-bubble">
         {lines.map((line, i) => (
           <p key={i}>{line}</p>
@@ -205,10 +208,18 @@ export default function Assistant() {
     <div className="container section assistant">
       <div className="page-head">
         <div>
-          <h1>🤖 AI-консультант</h1>
+          <h1>
+            <IconAssistant size={26} /> AI-консультант
+          </h1>
           <p className="muted">Подберёт технику под бюджет, город и класс, подскажет правила аренды. Работает по-русски и по-казахски.</p>
         </div>
-        {offline ? <span className="badge badge-maintenance">⚙ автономный режим</span> : <span className="badge badge-active">● онлайн</span>}
+        {offline ? (
+          <span className="badge badge-maintenance">
+            <IconRestore size={14} /> автономный режим
+          </span>
+        ) : (
+          <span className="badge badge-active">● онлайн</span>
+        )}
       </div>
 
       <div className="chat">
@@ -227,7 +238,9 @@ export default function Assistant() {
           ))}
           {busy && (
             <div className="msg msg-bot">
-              <span className="msg-avatar">🤖</span>
+              <span className="msg-avatar">
+        <IconAssistant size={18} />
+      </span>
               <div className="msg-bubble msg-typing">
                 <span></span>
                 <span></span>

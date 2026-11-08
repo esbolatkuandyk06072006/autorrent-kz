@@ -1,3 +1,5 @@
+import { IconClose, IconSearch } from './icons.jsx'
+
 export function Spinner({ label = 'Загрузка…' }) {
   return (
     <div className="spinner-box">
@@ -12,7 +14,7 @@ export function Alert({ kind = 'error', children }) {
   return <div className={`alert alert-${kind}`}>{children}</div>
 }
 
-export function EmptyState({ icon = '🔍', title, hint, action }) {
+export function EmptyState({ icon = <IconSearch size={44} />, title, hint, action }) {
   return (
     <div className="empty-state">
       <div className="empty-icon">{icon}</div>
@@ -52,7 +54,7 @@ export function Modal({ title, onClose, children }) {
         <div className="modal-head">
           <h3>{title}</h3>
           <button className="modal-close" onClick={onClose} aria-label="Закрыть">
-            ✕
+            <IconClose size={18} />
           </button>
         </div>
         <div className="modal-body">{children}</div>

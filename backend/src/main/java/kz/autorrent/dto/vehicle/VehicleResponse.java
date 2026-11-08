@@ -32,6 +32,11 @@ public record VehicleResponse(
         Long reviewCount,
         List<String> tags,
         Long ownerId,
-        String ownerName
+        String ownerName,
+        // --- Шаг 7: локатор точки выдачи ---
+        String pickupAddress,
+        Double latitude,
+        Double longitude,
+        String pickupInstructions
 ) {
 }

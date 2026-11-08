@@ -1,4 +1,5 @@
 import { Component } from 'react'
+import { IconShield } from './icons.jsx'
 
 /**
  * Catches render/runtime errors inside its subtree so a single broken page
@@ -35,7 +36,9 @@ export default class ErrorBoundary extends Component {
     return (
       <div className="container section">
         <div className="empty-state error-boundary">
-          <div className="empty-icon">⚠️</div>
+          <div className="empty-icon">
+            <IconShield size={44} />
+          </div>
           <h3>Что-то пошло не так</h3>
           <p>
             Эта часть приложения не смогла загрузиться. Попробуйте обновить страницу — обычно этого

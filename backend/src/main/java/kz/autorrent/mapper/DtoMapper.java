@@ -24,7 +24,8 @@ public final class DtoMapper {
                 user.getLastName(),
                 user.getPhone(),
                 user.getRole().name(),
-                user.getDrivingLicense() == null ? null : user.getDrivingLicense().name()
+                user.getDrivingLicense() == null ? null : user.getDrivingLicense().name(),
+                user.getKycStatus()
         );
     }
 
@@ -60,20 +61,35 @@ public final class DtoMapper {
                 vehicle.getTags() == null ? null : List.copyOf(vehicle.getTags()),
                 vehicle.getOwner() == null ? null : vehicle.getOwner().getId(),
                 vehicle.getOwner() == null ? null
-                        : vehicle.getOwner().getFirstName() + " " + vehicle.getOwner().getLastName()
+                        : vehicle.getOwner().getFirstName() + " " + vehicle.getOwner().getLastName(),
+                vehicle.getPickupAddress(),
+                vehicle.getLatitude(),
+                vehicle.getLongitude(),
+                vehicle.getPickupInstructions()
         );
     }
 
     public static ReservationResponse toReservationResponse(Reservation reservation) {
+        // По умолчанию код от ключа и инструкция выдачи скрыты (для админа,
+        // владельца техники и списков); клиенту — см. overload с флагом.
+        return toReservationResponse(reservation, false);
+    }
+
+    /**
+     * @param includeKey true — код от ключа и инструкция выдачи включаются
+     *                   в ответ (только для клиента, оформившего бронь).
+     */
+    public static ReservationResponse toReservationResponse(Reservation reservation, boolean includeKey) {
+        Vehicle vehicle = reservation.getVehicle();
         return new ReservationResponse(
                 reservation.getId(),
                 reservation.getUser().getId(),
                 reservation.getUser().getEmail(),
-                reservation.getVehicle().getId(),
-                reservation.getVehicle().getBrand(),
-                reservation.getVehicle().getModel(),
-                reservation.getVehicle().getLicensePlate(),
-                reservation.getVehicle().getCity(),
+                vehicle.getId(),
+                vehicle.getBrand(),
+                vehicle.getModel(),
+                vehicle.getLicensePlate(),
+                vehicle.getCity(),
                 reservation.getStartDate(),
                 reservation.getEndDate(),
                 reservation.getDaysCount(),
@@ -85,7 +101,12 @@ public final class DtoMapper {
                 reservation.getHours(),
                 reservation.getWithOperator(),
                 reservation.getDiscountPercent(),
-                reservation.getBusinessOrder() == null ? null : reservation.getBusinessOrder().getId()
+                reservation.getBusinessOrder() == null ? null : reservation.getBusinessOrder().getId(),
+                includeKey ? reservation.getKeyCode() : null,
+                vehicle.getPickupAddress(),
+                vehicle.getLatitude(),
+                vehicle.getLongitude(),
+                includeKey ? vehicle.getPickupInstructions() : null
         );
     }
 
