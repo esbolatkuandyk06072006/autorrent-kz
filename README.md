@@ -446,6 +446,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File backend\scripts\smoke-test.p
 
 Скрипт проверяет 45 сценариев: публичный каталог, 401/403, логин ADMIN/USER, создание автомобиля, бронирование, конфликт `409`, валидацию `400`, отмену, смену статусов, отзывы и модерацию, мягкое удаление и Swagger/OpenAPI.
 
+Дополнительные smoke-тесты (Node.js 20+):
+
+```powershell
+node backend\scripts\smoke-step4.mjs      # роли, теги, календарь, брони (44 проверки)
+node backend\scripts\smoke-step8.mjs      # код от ключа и акты приёма-передачи (25 проверок)
+node backend\scripts\smoke-auth-kyc.mjs   # SMS-вход и KYC-регистрация (18 проверок)
+```
+
 ---
 
 ## Структура проекта
@@ -472,7 +480,7 @@ backend/
 │   └── static/         # сборка frontend (не в git)
 ├── src/test/java/kz/autorrent
 ├── postman/AutoRentKZ.postman_collection.json
-├── scripts/smoke-test.ps1, smoke-step4.mjs, smoke-step8.mjs
+├── scripts/smoke-test.ps1, smoke-step4.mjs, smoke-step8.mjs, smoke-auth-kyc.mjs
 ├── pom.xml
 └── mvnw / mvnw.cmd
 
