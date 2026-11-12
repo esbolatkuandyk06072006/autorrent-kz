@@ -5,9 +5,9 @@ import kz.autorrent.exception.BadRequestException;
 /**
  * Нормализация телефонов.
  *
- * Формат хранения: +7 и ровно 10 цифр (например, +77000000002).
- * На вход принимается пользовательский ввод вида «+7 700 123 45 67»,
- * «87001234567», «77001234567», «+77001234567».
+ * Базовый формат хранения — E.164: «+» и 8–15 цифр (например, +77000000002,
+ * +447911123456, +12425550123). Для обратной совместимости локальные
+ * казахстанские номера без «+» (10 цифр, 11 цифр с 7/8) приводятся к +7XXXXXXXXXX.
  */
 public final class PhoneUtil {
 
@@ -15,23 +15,34 @@ public final class PhoneUtil {
     }
 
     /**
-     * Приводит телефон к формату хранения +7XXXXXXXXXX.
+     * Приводит телефон к международному формату +XXXXXXXXXXX.
      *
      * @throws BadRequestException «Неверный формат телефона» при неверном вводе
      */
     public static String normalize(String rawPhone) {
-        if (rawPhone == null) {
+        if (rawPhone == null || rawPhone.isBlank()) {
             throw new BadRequestException("Неверный формат телефона");
         }
+        String trimmed = rawPhone.trim();
+        boolean international = trimmed.startsWith("+");
         // Убираем всё, кроме цифр (пробелы, скобки, дефисы, плюс).
-        String digits = rawPhone.replaceAll("[^0-9]", "");
-        // 11 цифр с ведущей 8 (код страны) или 7 → отбрасываем первую цифру.
-        if (digits.length() == 11 && (digits.startsWith("8") || digits.startsWith("7"))) {
-            digits = digits.substring(1);
-        }
-        if (digits.length() != 10) {
+        String digits = trimmed.replaceAll("[^0-9]", "");
+        if (digits.isEmpty()) {
             throw new BadRequestException("Неверный формат телефона");
         }
-        return "+7" + digits;
+        // Старый локальный формат Казахстана: 8XXXXXXXXXX или 7XXXXXXXXXX.
+        if (!international && digits.length() == 11 && (digits.startsWith("8") || digits.startsWith("7"))) {
+            digits = digits.substring(1);
+            return "+7" + digits;
+        }
+        // 10 цифр без кода страны — считаем казахстанским номером.
+        if (!international && digits.length() == 10) {
+            return "+7" + digits;
+        }
+        // E.164: от 8 до 15 цифр, первая цифра — код страны.
+        if (digits.length() < 8 || digits.length() > 15) {
+            throw new BadRequestException("Неверный формат телефона");
+        }
+        return "+" + digits;
     }
 }

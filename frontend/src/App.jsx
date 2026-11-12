@@ -50,57 +50,61 @@ function NotFound() {
 
 export default function App() {
   const { t } = useTranslation()
+  const location = useLocation()
   return (
     <div className="app">
       <Header />
       <main>
         <ErrorBoundary>
-          <Routes>
-          <Route path="/" element={<Cars />} />
-          <Route path="/cars/:id" element={<CarDetail />} />
-          <Route path="/login" element={<Login />} />
-          {/* Каршеринг-флоу: соглашения и KYC-верификация документов. */}
-          <Route path="/welcome" element={<Welcome />} />
-          <Route path="/kyc" element={<Kyc />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/favorites" element={<Favorites />} />
-          <Route path="/compare" element={<Compare />} />
-          <Route path="/assistant" element={<Assistant />} />
-          <Route path="/routes" element={<RoutesPage />} />
-          <Route
-            path="/business"
-            element={
-              <RequireAuth>
-                <Business />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/my-reservations"
-            element={
-              <RequireAuth>
-                <MyReservations />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <RequireAuth>
-                <Profile />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/admin/*"
-            element={
-              <RequireAuth staffOnly>
-                <AdminPanel />
-              </RequireAuth>
-            }
-          />
-          <Route path="*" element={<NotFound />} />
-          </Routes>
+          {/* App Shell: каждая страница появляется с мягкой анимацией. */}
+          <div className="page-shell" key={location.pathname}>
+            <Routes>
+              <Route path="/" element={<Cars />} />
+              <Route path="/cars/:id" element={<CarDetail />} />
+              <Route path="/login" element={<Login />} />
+              {/* Каршеринг-флоу: соглашения и KYC-верификация документов. */}
+              <Route path="/welcome" element={<Welcome />} />
+              <Route path="/kyc" element={<Kyc />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/favorites" element={<Favorites />} />
+              <Route path="/compare" element={<Compare />} />
+              <Route path="/assistant" element={<Assistant />} />
+              <Route path="/routes" element={<RoutesPage />} />
+              <Route
+                path="/business"
+                element={
+                  <RequireAuth>
+                    <Business />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/my-reservations"
+                element={
+                  <RequireAuth>
+                    <MyReservations />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <RequireAuth>
+                    <Profile />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/admin/*"
+                element={
+                  <RequireAuth staffOnly>
+                    <AdminPanel />
+                  </RequireAuth>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
         </ErrorBoundary>
       </main>
       <footer className="footer">

@@ -151,6 +151,36 @@ export const IconGlobe = (p) => (
   </Svg>
 )
 
+/* ---------- Голос и чат ---------- */
+
+export const IconVolume = (p) => (
+  <Svg {...p}>
+    <path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1Z" />
+    <path d="M15.2 8.6a4.8 4.8 0 0 1 0 6.8M17.8 6a8.4 8.4 0 0 1 0 12" />
+  </Svg>
+)
+
+export const IconVolumeOff = (p) => (
+  <Svg {...p}>
+    <path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1Z" />
+    <path d="m15.5 9.5 5 5M20.5 9.5l-5 5" />
+  </Svg>
+)
+
+export const IconMic = (p) => (
+  <Svg {...p}>
+    <rect x="9" y="3" width="6" height="11" rx="3" />
+    <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6" />
+  </Svg>
+)
+
+export const IconSend = (p) => (
+  <Svg {...p}>
+    <path d="m3.5 11.5 17-7.5-5.5 16-4-6.5-7.5-2Z" />
+    <path d="m11 13.5 5-5" />
+  </Svg>
+)
+
 /* ---------- Карточка техники ---------- */
 
 export const IconPin = (p) => (

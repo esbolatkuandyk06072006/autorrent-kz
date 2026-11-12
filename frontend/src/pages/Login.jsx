@@ -5,6 +5,7 @@ import { apiPost } from '../api.js'
 import { setSignup } from '../signup.js'
 import { Alert } from '../components/ui.jsx'
 import { useTranslation } from '../i18n.jsx'
+import { COUNTRIES, countryName, findCountry } from '../countries.js'
 import {
   BrandMark,
   IconArrowRight,
@@ -26,12 +27,13 @@ import {
  */
 export default function Login() {
   const { login, applyAuth, isAuth } = useAuth()
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
 
   const [step, setStep] = useState('phone') // 'phone' | 'code' | 'password'
-  const [phone, setPhone] = useState('')
+  const [countryCode, setCountryCode] = useState('KZ')
+  const [national, setNational] = useState('')
   const [code, setCode] = useState('')
   const [devCode, setDevCode] = useState(null)
   const [resendIn, setResendIn] = useState(0)
@@ -55,7 +57,7 @@ export default function Login() {
     return () => clearInterval(timer)
   }, [resendIn])
 
-  // Фоновая карта: тёмные тайлы Carto (стиль 2GIS), панель поверх неё.
+  // Фоновая карта: яркая улично-дорожная подложка Esri, панель поверх неё.
   useEffect(() => {
     let cancelled = false
     let timer = null
@@ -65,16 +67,18 @@ export default function Login() {
       if (cancelled || !mapHostRef.current || mapRef.current || !L) return
       const map = L.map(mapHostRef.current, {
         center: [43.238, 76.945],
-        zoom: 11,
+        zoom: 12,
         zoomControl: false,
         attributionControl: true,
         scrollWheelZoom: false
       })
-      // Тёмная подложка Esri (не требует API-ключа), стиль в духе 2GIS.
+      // Яркие улицы и подписи Esri (без API-ключа): контрастная подложка,
+      // чтобы дороги читались, а панель входа оставалась главным акцентом.
       L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
         {
-          maxZoom: 16,
+          maxZoom: 19,
+          detectRetina: true,
           attribution: 'Tiles &copy; Esri'
         }
       ).addTo(map)
@@ -122,28 +126,36 @@ export default function Login() {
         mapRef.current = null
       }
     }
-  }, [step])
+  }, [])
 
-  /** Нормализация ввода к виду +7XXXXXXXXXX (цифры после +7 — максимум 10). */
-  const formatPhone = (value) => {
-    let digits = value.replace(/\D/g, '')
-    if (digits.startsWith('8')) digits = '7' + digits.slice(1)
-    if (!digits.startsWith('7')) digits = '7' + digits
-    digits = digits.slice(0, 11)
-    const body = digits.slice(1)
-    let out = '+7'
-    if (body.length > 0) out += ' ' + body.slice(0, 3)
-    if (body.length > 3) out += ' ' + body.slice(3, 6)
-    if (body.length > 6) out += ' ' + body.slice(6, 8)
-    if (body.length > 8) out += ' ' + body.slice(8, 10)
-    return out
+  // Международный номер: код страны из списка + национальная часть.
+  const country = findCountry(countryCode)
+  const dialDigits = country.dial.replace(/\D/g, '')
+  const maxNational = Math.max(6, 15 - dialDigits.length)
+  const nationalDigits = national.replace(/\D/g, '')
+  const normalizedPhone = country.dial + nationalDigits
+  const displayPhone = national ? `${country.dial} ${national}` : country.dial
+  const phoneValid =
+    nationalDigits.length >= 6 && dialDigits.length + nationalDigits.length <= 15
+
+  /** Форматирование национальной части: +7 — 3-3-2-2, остальные — по 3. */
+  const formatNational = (value) => {
+    const digits = value.replace(/\D/g, '').slice(0, maxNational)
+    if (country.dial === '+7') {
+      return [digits.slice(0, 3), digits.slice(3, 6), digits.slice(6, 8), digits.slice(8, 10)]
+        .filter(Boolean)
+        .join(' ')
+    }
+    return digits.replace(/(\d{3})(?=\d)/g, '$1 ').trim()
   }
 
-  // В поле номер хранится с пробелами (+7 700 123 45 67), поэтому проверяем
-  // только цифры и отправляем на сервер чистый формат +7XXXXXXXXXX.
-  const phoneDigits = phone.replace(/\D/g, '')
-  const phoneValid = /^7\d{10}$/.test(phoneDigits)
-  const normalizedPhone = '+' + phoneDigits
+  const pickCountry = (nextCode) => {
+    setCountryCode(nextCode)
+    setError(null)
+    const nextDialLength = findCountry(nextCode).dial.replace(/\D/g, '').length
+    const nextMax = Math.max(6, 15 - nextDialLength)
+    setNational((value) => value.replace(/\D/g, '').slice(0, nextMax))
+  }
 
   const sendCode = async (e) => {
     e?.preventDefault()
@@ -229,7 +241,7 @@ export default function Login() {
           <div className="auth-head">
             <h1>{t('authScreen.title')}</h1>
             <p className="muted">
-              {step === 'phone' ? t('authScreen.subtitle') : t('authScreen.codeSubtitle', { phone })}
+              {step === 'phone' ? t('authScreen.subtitle') : t('authScreen.codeSubtitle', { phone: displayPhone })}
             </p>
           </div>
         )}
@@ -238,19 +250,33 @@ export default function Login() {
 
         {step === 'phone' && (
           <form onSubmit={sendCode} className="form">
+            <label className="country-field">
+              <span>{t('authScreen.country')}</span>
+              <select
+                value={countryCode}
+                onChange={(e) => pickCountry(e.target.value)}
+                aria-label={t('authScreen.country')}
+              >
+                {COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {countryName(c.code, lang)} · {c.dial}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label className="phone-field">
               <span>{t('authScreen.phoneLabel')}</span>
               <div className="phone-row">
-                <select className="phone-country" defaultValue="+7" aria-label={t('authScreen.country')}>
-                  <option value="+7">KZ +7</option>
-                </select>
+                <span className="phone-prefix">
+                  {country.dial}
+                </span>
                 <input
                   type="tel"
                   inputMode="tel"
                   autoComplete="tel-national"
-                  value={phone}
-                  onChange={(e) => setPhone(formatPhone(e.target.value))}
-                  placeholder="+7 700 123 45 67"
+                  value={national}
+                  onChange={(e) => setNational(formatNational(e.target.value))}
+                  placeholder={country.dial === '+7' ? '700 123 45 67' : '123 456 789'}
                   aria-label={t('authScreen.phoneLabel')}
                 />
               </div>
