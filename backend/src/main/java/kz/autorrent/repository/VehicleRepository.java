@@ -24,6 +24,8 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
 
     boolean existsByLicensePlateIgnoreCaseAndIdNot(String licensePlate, Long id);
 
+    Optional<Vehicle> findByLicensePlateIgnoreCase(String licensePlate);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select v from Vehicle v where v.id = :id")
     Optional<Vehicle> findByIdForUpdate(@Param("id") Long id);

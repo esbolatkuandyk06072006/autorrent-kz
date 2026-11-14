@@ -182,6 +182,9 @@ public class VehicleService {
                 .withOperator(Boolean.TRUE.equals(request.withOperator()))
                 .operatorPricePerDay(request.operatorPricePerDay())
                 .pricePerHour(request.pricePerHour())
+                // Гибкие условия сдачи: без залога и с доставкой до клиента.
+                .noDeposit(Boolean.TRUE.equals(request.noDeposit()))
+                .deliveryAvailable(Boolean.TRUE.equals(request.deliveryAvailable()))
                 .pricePerDay(request.pricePerDay())
                 .city(request.city().trim())
                 // Владелец — текущий пользователь (OWNER); у админа техника
@@ -228,6 +231,8 @@ public class VehicleService {
         vehicle.setWithOperator(Boolean.TRUE.equals(request.withOperator()));
         vehicle.setOperatorPricePerDay(request.operatorPricePerDay());
         vehicle.setPricePerHour(request.pricePerHour());
+        vehicle.setNoDeposit(Boolean.TRUE.equals(request.noDeposit()));
+        vehicle.setDeliveryAvailable(Boolean.TRUE.equals(request.deliveryAvailable()));
         vehicle.setPricePerDay(request.pricePerDay());
         vehicle.setCity(request.city().trim());
         vehicle.setDescription(request.description());

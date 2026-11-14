@@ -22,6 +22,8 @@ public record VehicleResponse(
         Boolean withOperator,
         BigDecimal operatorPricePerDay,
         BigDecimal pricePerHour,
+        Boolean noDeposit,
+        Boolean deliveryAvailable,
         BigDecimal pricePerDay,
         String city,
         String status,

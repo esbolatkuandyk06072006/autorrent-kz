@@ -102,7 +102,22 @@ export const REVIEW_STATUS_LABELS = {
   HIDDEN: 'Скрыт'
 }
 
-export const CITIES = ['Almaty', 'Astana', 'Shymkent', 'Karaganda', 'Aktau']
+export const CITIES = [
+  'Almaty',
+  'Astana',
+  'Shymkent',
+  'Karaganda',
+  'Aktau',
+  'Taraz',
+  'Aktobe',
+  'Atyrau',
+  'Pavlodar',
+  'Semey',
+  'Oskemen',
+  'Kostanay',
+  'Kyzylorda',
+  'Turkistan'
+]
 
 export const money = (value) => {
   if (value === null || value === undefined) return '—'

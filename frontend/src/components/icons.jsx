@@ -399,6 +399,20 @@ export const IconMountains = (p) => (
   </Svg>
 )
 
+export const IconPlus = (p) => (
+  <Svg {...p}>
+    <path d="M12 5v14M5 12h14" />
+  </Svg>
+)
+
+export const IconWallet = (p) => (
+  <Svg {...p}>
+    <rect x="3" y="6" width="18" height="13" rx="3" />
+    <path d="M3 10h18" />
+    <path d="M15.5 14.5h2" />
+  </Svg>
+)
+
 export const IconTrafficLight = ({ size = 64 }) => (
   <svg width={size} height={size * 1.7} viewBox="0 0 40 68" aria-hidden="true">
     <rect x="6" y="2" width="28" height="64" rx="12" fill="#0f172a" stroke="#334155" strokeWidth="2" />

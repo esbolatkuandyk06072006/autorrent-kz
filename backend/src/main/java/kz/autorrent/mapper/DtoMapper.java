@@ -50,6 +50,8 @@ public final class DtoMapper {
                 vehicle.getWithOperator(),
                 vehicle.getOperatorPricePerDay(),
                 vehicle.getPricePerHour(),
+                vehicle.getNoDeposit(),
+                vehicle.getDeliveryAvailable(),
                 vehicle.getPricePerDay(),
                 vehicle.getCity(),
                 vehicle.getStatus().name(),

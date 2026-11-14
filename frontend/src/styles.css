@@ -4137,3 +4137,920 @@ body.drawer-open {
     animation: none;
   }
 }
+
+/* ===================== Нижняя навигация (Bottom Nav) ===================== */
+/* Класс на body: контент не уезжает под фиксированный бар. */
+body.has-bottom-nav .app {
+  padding-bottom: calc(86px + env(safe-area-inset-bottom));
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 70;
+  display: grid;
+  grid-template-columns: repeat(2, 74px) 66px repeat(2, 74px);
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: 0 12px 34px rgba(10, 18, 35, 0.22);
+  transition: transform 0.28s ease, opacity 0.28s ease;
+}
+
+/* Drawer открыт — бар прячется вниз, чтобы не мешать. */
+body.drawer-open .bottom-nav {
+  transform: translateX(-50%) translateY(140%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bottom-tab {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 4px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, transform 0.12s;
+}
+
+.bottom-tab svg {
+  width: 21px;
+  height: 21px;
+}
+
+.bottom-tab:active {
+  transform: scale(0.94);
+}
+
+.bottom-tab:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.bottom-tab.is-active {
+  color: var(--primary);
+}
+
+.bottom-tab.is-active svg {
+  filter: drop-shadow(0 2px 6px color-mix(in srgb, var(--primary) 40%, transparent));
+}
+
+.bottom-badge {
+  position: absolute;
+  top: 1px;
+  right: 8px;
+  min-width: 17px;
+  padding: 1px 4px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-text);
+  font-size: 10px;
+  font-weight: 700;
+  font-style: normal;
+  line-height: 15px;
+  text-align: center;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 45%, transparent);
+}
+
+/* Центральная акцентная кнопка «+» — приподнята над баром. */
+.bottom-fab {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  margin: 0 4px;
+  align-self: center;
+  transform: translateY(-16px);
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: var(--primary-text);
+  cursor: pointer;
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--primary) 45%, transparent);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.bottom-fab svg {
+  width: 26px;
+  height: 26px;
+  transition: transform 0.25s ease;
+}
+
+.bottom-fab:hover {
+  transform: translateY(-20px) scale(1.06);
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--primary) 55%, transparent);
+  filter: saturate(1.15);
+}
+
+.bottom-fab:hover svg {
+  transform: rotate(90deg);
+}
+
+.bottom-fab:active {
+  transform: translateY(-14px) scale(0.96);
+}
+
+/* ===================== Мастер «Сдать технику в аренду» ===================== */
+body.wizard-open {
+  overflow: hidden;
+}
+
+.wizard-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(7, 12, 24, 0.55);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  animation: wizard-fade 0.22s ease;
+}
+
+@keyframes wizard-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.wizard {
+  display: flex;
+  flex-direction: column;
+  width: min(600px, 100%);
+  max-height: min(92dvh, 780px);
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+  box-shadow: 0 24px 64px rgba(6, 12, 28, 0.4);
+  outline: none;
+  overflow: hidden;
+  animation: wizard-pop 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+@keyframes wizard-pop {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.wizard-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.wizard-title {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.wizard-title-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: var(--primary-text);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--primary) 40%, transparent);
+}
+
+.wizard-title-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.wizard-title h2 {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.2;
+}
+
+.wizard-title p {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.wizard-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s, transform 0.15s, background 0.15s;
+}
+
+.wizard-close:hover {
+  color: var(--text);
+  transform: rotate(90deg);
+}
+
+.wizard-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Шаги 1-2-3 */
+.wizard-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.wizard-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: default;
+}
+
+.wizard-step.is-done {
+  color: var(--success);
+  cursor: pointer;
+}
+
+.wizard-step.is-current {
+  color: var(--text);
+}
+
+.wizard-step-dot {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  font-size: 12px;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.wizard-step.is-current .wizard-step-dot {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-text);
+}
+
+.wizard-step.is-done .wizard-step-dot {
+  border-color: var(--success);
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.wizard-step-dot svg {
+  width: 13px;
+  height: 13px;
+}
+
+.wizard-steps .wizard-step-label {
+  white-space: nowrap;
+}
+
+.wizard-alert {
+  margin: 10px 20px 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.wizard-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px 8px;
+  min-height: 220px;
+}
+
+.wizard-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: wizard-fade 0.2s ease;
+}
+
+/* Карточки типа техники */
+.wizard-type-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.wizard-type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.12s;
+}
+
+.wizard-type-card svg {
+  width: 26px;
+  height: 26px;
+}
+
+.wizard-type-card:hover {
+  transform: translateY(-2px);
+  color: var(--text);
+}
+
+.wizard-type-card.is-active {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  color: var(--primary);
+}
+
+.wizard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.wizard-grid .wizard-field:nth-child(5) {
+  grid-column: 1 / -1;
+}
+
+.wizard-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wizard-field-label {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.wizard-field-label small {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.wizard-field input,
+.wizard-field select,
+.wizard-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.wizard-field textarea {
+  resize: vertical;
+}
+
+.wizard-field input:focus,
+.wizard-field select:focus,
+.wizard-field textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+.wizard-field.has-error input,
+.wizard-field.has-error select,
+.wizard-field.has-error textarea {
+  border-color: var(--danger);
+}
+
+.wizard-field-error {
+  font-size: 11.5px;
+  color: var(--danger);
+}
+
+.wizard-plate {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.wizard-row-label {
+  margin-top: 2px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+/* Сегментированные переключатели (КПП, топливо) */
+.segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--surface-2);
+}
+
+.segmented button {
+  padding: 9px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.segmented button:hover {
+  color: var(--text);
+}
+
+.segmented button.is-active {
+  background: var(--primary);
+  color: var(--primary-text);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
+/* Быстрые теги */
+.wizard-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.12s;
+}
+
+.chip-tag svg {
+  width: 15px;
+  height: 15px;
+}
+
+.chip-tag:hover {
+  color: var(--text);
+  transform: translateY(-1px);
+}
+
+.chip-tag.is-active {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  color: var(--primary);
+}
+
+/* Галерея фото с превью */
+.wizard-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.wizard-photo {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.wizard-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wizard-photo figcaption {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(7, 12, 24, 0.72);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.wizard-photo-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(7, 12, 24, 0.72);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.wizard-photo-remove:hover {
+  background: var(--danger);
+  transform: scale(1.08);
+}
+
+.wizard-photo-remove svg {
+  width: 13px;
+  height: 13px;
+}
+
+.wizard-photo-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  aspect-ratio: 1;
+  border: 1.5px dashed color-mix(in srgb, var(--primary) 45%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--primary) 5%, var(--surface));
+  color: var(--primary);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.12s;
+}
+
+.wizard-photo-add svg {
+  width: 24px;
+  height: 24px;
+}
+
+.wizard-photo-add:hover {
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  transform: translateY(-2px);
+}
+
+.wizard-hint {
+  margin: -4px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Цена и калькулятор дохода */
+.wizard-price-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.wizard-price-input input {
+  padding-right: 84px;
+}
+
+.wizard-price-input span {
+  position: absolute;
+  right: 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.wizard-calc {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  background: linear-gradient(140deg, color-mix(in srgb, var(--primary) 8%, var(--surface)) 0%, var(--surface) 65%);
+  transition: border-color 0.25s;
+}
+
+.wizard-calc.is-live {
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
+}
+
+.wizard-calc-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wizard-calc-head svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  color: var(--primary);
+}
+
+.wizard-calc-head b {
+  display: block;
+  font-size: 14px;
+}
+
+.wizard-calc-head small {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.wizard-calc-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.wizard-calc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  font-size: 13px;
+  color: var(--muted);
+  animation: wizard-fade 0.3s ease;
+}
+
+.wizard-calc-row b {
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(120deg, var(--primary), color-mix(in srgb, var(--primary) 55%, var(--success)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.wizard-calc-row-bonus {
+  background: color-mix(in srgb, var(--success) 12%, var(--surface-2));
+}
+
+.wizard-calc-row-bonus i {
+  font-style: normal;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--success);
+  color: var(--success-soft);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.wizard-calc-note {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.wizard-calc-empty p {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* Тумблеры условий сдачи */
+.wizard-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wizard-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.wizard-toggle:hover {
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+}
+
+.wizard-toggle-text b {
+  display: block;
+  font-size: 13.5px;
+}
+
+.wizard-toggle-text small {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.wizard-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.wizard-switch {
+  position: relative;
+  width: 44px;
+  height: 25px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.wizard-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(10, 18, 35, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.wizard-toggle input:checked + .wizard-switch {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.wizard-toggle input:checked + .wizard-switch::after {
+  transform: translateX(19px);
+}
+
+.wizard-toggle input:focus-visible + .wizard-switch {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Подвал мастера */
+.wizard-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* Приглашение для гостей и клиентов */
+.wizard-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 34px 26px 30px;
+  text-align: center;
+}
+
+.wizard-gate-ring {
+  display: grid;
+  place-items: center;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  border: 2px dashed color-mix(in srgb, var(--primary) 55%, var(--border));
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  color: var(--primary);
+  animation: wizard-fade 0.3s ease;
+}
+
+.wizard-gate-ring svg {
+  width: 32px;
+  height: 32px;
+}
+
+.wizard-gate h3 {
+  margin: 4px 0 0;
+  font-size: 18px;
+}
+
+.wizard-gate p {
+  margin: 0;
+  max-width: 380px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.wizard-gate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* Мобильная адаптация нижнего бара и мастера */
+@media (max-width: 560px) {
+  .bottom-nav {
+    left: 10px;
+    right: 10px;
+    transform: none;
+    grid-template-columns: repeat(2, 1fr) 62px repeat(2, 1fr);
+    border-radius: 20px;
+  }
+
+  body.drawer-open .bottom-nav {
+    transform: translateY(140%);
+  }
+
+  .bottom-tab span {
+    font-size: 10px;
+  }
+
+  .wizard {
+    max-height: 96dvh;
+    border-radius: 18px;
+  }
+
+  .wizard-overlay {
+    padding: 10px;
+  }
+
+  .wizard-steps .wizard-step-label {
+    display: none;
+  }
+
+  .wizard-steps {
+    justify-items: center;
+  }
+
+  .wizard-photo-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .wizard-type-cards {
+    gap: 8px;
+  }
+}

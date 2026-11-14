@@ -93,6 +93,16 @@ public class Vehicle {
     @Column(name = "price_per_hour", precision = 10, scale = 2)
     private BigDecimal pricePerHour;
 
+    /** Гибкие условия сдачи: аренда без залога. */
+    @Builder.Default
+    @Column(name = "no_deposit", nullable = false)
+    private Boolean noDeposit = false;
+
+    /** Гибкие условия сдачи: владелец сам доставляет технику до клиента. */
+    @Builder.Default
+    @Column(name = "delivery_available", nullable = false)
+    private Boolean deliveryAvailable = false;
+
     @Column(name = "price_per_day", nullable = false, precision = 10, scale = 2)
     private BigDecimal pricePerDay;
 

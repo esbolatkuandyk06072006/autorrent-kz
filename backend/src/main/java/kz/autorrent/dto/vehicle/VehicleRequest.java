@@ -36,6 +36,8 @@ public record VehicleRequest(
         Boolean withOperator,
         @DecimalMin(value = "0.01") @Digits(integer = 8, fraction = 2) BigDecimal operatorPricePerDay,
         @DecimalMin(value = "0.01") @Digits(integer = 8, fraction = 2) BigDecimal pricePerHour,
+        Boolean noDeposit,
+        Boolean deliveryAvailable,
         @NotNull @DecimalMin(value = "0.01") @Digits(integer = 8, fraction = 2) BigDecimal pricePerDay,
         @NotBlank @Size(max = 50) String city,
         @Size(max = 2000) String description,

@@ -1,5 +1,6 @@
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import Header from './components/Header.jsx'
+import BottomNav from './components/BottomNav.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { useAuth } from './AuthContext.jsx'
 import { useTranslation } from './i18n.jsx'
@@ -107,6 +108,8 @@ export default function App() {
           </div>
         </ErrorBoundary>
       </main>
+      {/* Нижняя навигация мобильного стиля с центральной кнопкой «+». */}
+      <BottomNav />
       <footer className="footer">
         <div className="container footer-inner">
           <span>© 2026 AutoRent KZ · {t('footer.project')}</span>

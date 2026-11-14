@@ -19,6 +19,7 @@ import {
   IconShield,
   IconStar,
   IconUsers,
+  IconWallet,
   IconWedding,
   IconWeight
 } from '../components/icons.jsx'
@@ -226,6 +227,16 @@ export default function CarDetail() {
     }
   }
 
+  // Точка выдачи: координаты корректные числа — показываем карту и маршрут.
+  // Хук объявлен до ранних return'ов (правила хуков React).
+  const pickupPoint = useMemo(() => {
+    if (!car || car.latitude == null || car.longitude == null) return null
+    const lat = Number(car.latitude)
+    const lng = Number(car.longitude)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+    return { id: car.id, lat, lng, title: `${car.brand} ${car.model}`, address: car.pickupAddress }
+  }, [car])
+
   if (loading) return <Spinner label="Загружаем автомобиль…" />
   if (!car) {
     return (
@@ -238,15 +249,6 @@ export default function CarDetail() {
   const canReview = isAuth && !isAdmin
   const canEditReview = (review) =>
     isAuth && (isAdmin || (user && review.userId === user.id))
-
-  // Точка выдачи: координаты корректные числа — показываем карту и маршрут.
-  const pickupPoint = useMemo(() => {
-    if (!car || car.latitude == null || car.longitude == null) return null
-    const lat = Number(car.latitude)
-    const lng = Number(car.longitude)
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
-    return { id: car.id, lat, lng, title: `${car.brand} ${car.model}`, address: car.pickupAddress }
-  }, [car])
 
   return (
     <div className="container section">
@@ -280,6 +282,17 @@ export default function CarDetail() {
             {car.withOperator && (
               <span className="badge badge-soft">
                 <IconOperator size={14} /> с оператором
+              </span>
+            )}
+            {/* Гибкие условия сдачи из мастера добавления техники. */}
+            {car.noDeposit && (
+              <span className="badge badge-soft">
+                <IconWallet size={14} /> без залога
+              </span>
+            )}
+            {car.deliveryAvailable && (
+              <span className="badge badge-soft">
+                <IconPin size={14} /> доставка
               </span>
             )}
             <span className="badge badge-soft">

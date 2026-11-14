@@ -19,3 +19,5 @@ app:
   jwt:
     secret: test-secret-key-that-is-long-enough-for-hs256-123456
     expiration-seconds: 3600
+  upload:
+    dir: target/test-uploads

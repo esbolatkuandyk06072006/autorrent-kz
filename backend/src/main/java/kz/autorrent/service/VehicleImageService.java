@@ -2,9 +2,12 @@ package kz.autorrent.service;
 
 import kz.autorrent.dto.vehicle.VehicleResponse;
 import kz.autorrent.entity.Vehicle;
+import kz.autorrent.entity.enums.Role;
 import kz.autorrent.exception.BadRequestException;
+import kz.autorrent.exception.ForbiddenException;
 import kz.autorrent.mapper.DtoMapper;
 import kz.autorrent.repository.VehicleRepository;
+import kz.autorrent.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -43,10 +46,29 @@ public class VehicleImageService {
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
 
+    /**
+     * Управление фотографиями: админ — любой техникой, владелец (OWNER)
+     * — только своей. Проверка по образцу VehicleService.checkManageAccess.
+     */
+    private void checkVehicleAccess(Vehicle vehicle, CustomUserDetails principal) {
+        if (principal == null) {
+            throw new ForbiddenException("Access denied");
+        }
+        if (principal.getRole() == Role.ADMIN) {
+            return;
+        }
+        if (principal.getRole() != Role.OWNER
+                || vehicle.getOwner() == null
+                || !vehicle.getOwner().getId().equals(principal.getId())) {
+            throw new ForbiddenException("Only the vehicle owner or an admin can manage this vehicle's photos");
+        }
+    }
+
     @Transactional
-    public VehicleResponse uploadImages(Long vehicleId, List<MultipartFile> files) {
+    public VehicleResponse uploadImages(Long vehicleId, List<MultipartFile> files, CustomUserDetails principal) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new BadRequestException("Vehicle not found: " + vehicleId));
+        checkVehicleAccess(vehicle, principal);
 
         if (files == null || files.isEmpty()) {
             throw new BadRequestException("No files uploaded");
@@ -80,9 +102,10 @@ public class VehicleImageService {
     }
 
     @Transactional
-    public VehicleResponse removeImage(Long vehicleId, String imageUrl) {
+    public VehicleResponse removeImage(Long vehicleId, String imageUrl, CustomUserDetails principal) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new BadRequestException("Vehicle not found: " + vehicleId));
+        checkVehicleAccess(vehicle, principal);
 
         List<String> current = vehicle.getImages() == null
                 ? new ArrayList<>()
@@ -99,9 +122,10 @@ public class VehicleImageService {
     }
 
     @Transactional
-    public VehicleResponse clearImages(Long vehicleId) {
+    public VehicleResponse clearImages(Long vehicleId, CustomUserDetails principal) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new BadRequestException("Vehicle not found: " + vehicleId));
+        checkVehicleAccess(vehicle, principal);
 
         List<String> current = vehicle.getImages() == null
                 ? List.of()
